@@ -41,6 +41,11 @@ const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1),
 });
 
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+});
+
 // ─── POST /auth/send-otp ──────────────────────────────────────────────────────
 
 router.post('/send-otp', validate(sendOtpSchema), async (req: Request, res: Response, next: NextFunction) => {
@@ -263,6 +268,94 @@ router.post('/logout', authMiddleware, validate(refreshTokenSchema), async (req:
       .where(eq(refreshTokens.token, tokenHash));
 
     return res.json({ message: 'Logged out successfully' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── POST /auth/login — Clinic staff password login ───────────────────────────
+
+router.post('/login', validate(loginSchema), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email, password } = req.body as z.infer<typeof loginSchema>;
+
+    const staff = await db.query.clinicStaff.findFirst({
+      where: and(
+        eq(clinicStaff.email, email.toLowerCase()),
+        eq(clinicStaff.isActive, true)
+      ),
+    });
+
+    if (!staff || !staff.passwordHash) {
+      throw new AppError('Invalid email or password', 401);
+    }
+
+    const isMatch = await bcrypt.compare(password, staff.passwordHash);
+    if (!isMatch) {
+      throw new AppError('Invalid email or password', 401);
+    }
+
+    // Update last login
+    await db.update(clinicStaff).set({ lastLoginAt: new Date() }).where(eq(clinicStaff.id, staff.id));
+
+    const tokenPayload = { sub: staff.id, clinicId: staff.clinicId, role: staff.role };
+    const accessToken = generateAccessToken(tokenPayload);
+    const refreshToken = generateRefreshToken(tokenPayload);
+
+    await db.insert(refreshTokens).values({
+      staffId: staff.id,
+      token: hashRefreshToken(refreshToken),
+      expiresAt: addDays(new Date(), 7),
+    });
+
+    return res.json({
+      accessToken,
+      refreshToken,
+      staff: {
+        id: staff.id,
+        name: staff.name,
+        email: staff.email,
+        role: staff.role,
+        clinicId: staff.clinicId,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── POST /auth/super-admin/login — SaaS super-admin password login ───────────
+
+router.post('/super-admin/login', validate(loginSchema), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email, password } = req.body as z.infer<typeof loginSchema>;
+
+    const superEmail = process.env.SUPER_ADMIN_EMAIL || 'admin@clinicbook.com';
+    const superPassword = process.env.SUPER_ADMIN_PASSWORD || 'adminpassword123';
+
+    if (email.toLowerCase() !== superEmail.toLowerCase() || password !== superPassword) {
+      throw new AppError('Invalid admin email or password', 401);
+    }
+
+    const tokenPayload = {
+      sub: 'super-admin',
+      clinicId: 'system',
+      role: 'super_admin',
+    };
+    const accessToken = generateAccessToken(tokenPayload);
+    const refreshToken = generateRefreshToken(tokenPayload);
+
+    return res.json({
+      accessToken,
+      refreshToken,
+      staff: {
+        id: 'super-admin',
+        name: 'SaaS Platform Admin',
+        email: superEmail,
+        role: 'super_admin',
+        clinicId: 'system',
+      },
+    });
   } catch (err) {
     next(err);
   }

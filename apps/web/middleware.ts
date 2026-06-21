@@ -1,15 +1,53 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+/**
+ * Extracts the clinic slug dynamically from custom hostname/domain.
+ * - e.g., book.sriswethaclinic.com -> sriswethaclinic
+ * - e.g., sriswethaclinic.com -> sriswethaclinic
+ */
+export function getClinicSlugFromHost(hostname: string): string | null {
+  const parts = hostname.split('.');
+  if (parts.length < 2) return null;
+
+  const hostLower = hostname.toLowerCase();
+  // Bypass for system/development domains
+  if (
+    hostLower.includes('localhost') ||
+    hostLower.includes('vercel.app') ||
+    hostLower.includes('turbo.android')
+  ) {
+    return null;
+  }
+
+  // Handle book.clinic-slug.com
+  if (parts[0] === 'book') {
+    return parts[1];
+  }
+
+  // Handle clinic-slug.com
+  return parts[0];
+}
+
 export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
   const hostname = request.headers.get('host') || '';
 
-  // Match the custom subdomain
-  if (hostname === 'book.sriswethaclinic.com') {
-    // Rewrite root path to the clinic's booking path
+  // 1. Resolve custom domain root path to the correct clinic's book page
+  const customSlug = getClinicSlugFromHost(hostname);
+  if (customSlug) {
     if (url.pathname === '/') {
-      url.pathname = '/dr-ravi-clinic/book';
+      url.pathname = `/${customSlug}/book`;
+      return NextResponse.rewrite(url);
+    }
+  }
+
+  // 2. Rewrite /book/[clinicSlug] path to /[clinicSlug]/book dynamically
+  if (url.pathname.startsWith('/book/')) {
+    const parts = url.pathname.split('/');
+    const clinicSlug = parts[2];
+    if (clinicSlug) {
+      url.pathname = `/${clinicSlug}/book`;
       return NextResponse.rewrite(url);
     }
   }
@@ -30,3 +68,4 @@ export const config = {
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };
+

@@ -234,4 +234,69 @@ router.get('/:clinicId/dashboard', authMiddleware, requireClinicAccess,
   }
 );
 
+// ─── GET /clinics/super-admin/clinics — SaaS super-admin list all clinics ─────
+
+router.get('/super-admin/clinics', authMiddleware, requireRole('super_admin'), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const all = await db.query.clinics.findMany({
+      orderBy: clinics.name,
+    });
+    return res.json(all);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── POST /clinics/super-admin/clinics — SaaS super-admin create clinic ────────
+
+router.post('/super-admin/clinics', authMiddleware, requireRole('super_admin'), validate(createClinicSchema), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { name, slug, phone, email, address, timezone, ownerName, ownerEmail, ownerPassword } = req.body;
+
+    // Check slug uniqueness
+    const existing = await db.query.clinics.findFirst({
+      where: eq(clinics.slug, slug),
+    });
+    if (existing) throw new AppError('This URL slug is already taken. Please choose another.', 409);
+
+    const passwordHash = await bcrypt.hash(ownerPassword, 12);
+
+    const result = await db.transaction(async (tx) => {
+      // 1. Create a clinic group (standalone clinic = its own group)
+      const [group] = await tx.insert(clinicGroups).values({ name }).returning();
+
+      // 2. Create the clinic
+      const [clinic] = await tx.insert(clinics).values({
+        groupId: group.id,
+        name,
+        slug,
+        phone,
+        email,
+        address,
+        timezone,
+      }).returning();
+
+      // 3. Create the owner staff account
+      const [owner] = await tx.insert(clinicStaff).values({
+        clinicId: clinic.id,
+        name: ownerName,
+        email: ownerEmail.toLowerCase(),
+        role: 'owner',
+        passwordHash,
+      }).returning({ id: clinicStaff.id, name: clinicStaff.name, email: clinicStaff.email, role: clinicStaff.role });
+
+      return { clinic, owner };
+    });
+
+    return res.status(201).json({
+      message: 'Clinic created successfully.',
+      clinicId: result.clinic.id,
+      slug: result.clinic.slug,
+      bookingUrl: `/book/${result.clinic.slug}`,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

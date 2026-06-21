@@ -1,22 +1,49 @@
 import 'dotenv/config';
 import { db, pool } from './client';
-import { clinics, doctors, doctorAvailability, doctorBreaks } from './schema';
+import { clinics, clinicGroups, clinicStaff, doctors, doctorAvailability, doctorBreaks } from './schema';
 import { eq } from 'drizzle-orm';
+import bcrypt from 'bcryptjs';
 
 async function seed() {
   console.log('🌱 Starting seed...');
 
-  // Find clinic
-  const clinic = await db.query.clinics.findFirst({
+  // Find or create clinic
+  let clinic = await db.query.clinics.findFirst({
     where: eq(clinics.slug, 'dr-ravi-clinic'),
   });
 
   if (!clinic) {
-    console.error('❌ Clinic not found! Run API server or create clinic first.');
-    process.exit(1);
+    console.log('Creating clinic group...');
+    const [group] = await db.insert(clinicGroups).values({
+      name: 'Sri Swetha Clinic Group',
+    }).returning();
+
+    console.log('Creating clinic dr-ravi-clinic...');
+    const [insertedClinic] = await db.insert(clinics).values({
+      groupId: group.id,
+      name: 'Sri Swetha Clinic',
+      slug: 'dr-ravi-clinic',
+      phone: '9876543210',
+      email: 'ravi@drraviclinic.com',
+      address: '123 Health Ave, Heart District, Hyderabad',
+      timezone: 'Asia/Kolkata',
+      paymentGateway: 'free',
+    }).returning();
+    clinic = insertedClinic;
+
+    console.log('Creating owner staff account...');
+    const passwordHash = await bcrypt.hash('password123', 12);
+    await db.insert(clinicStaff).values({
+      clinicId: clinic.id,
+      name: 'Dr. Ravi Kumar',
+      email: 'ravi@drraviclinic.com',
+      phone: '9876543210',
+      role: 'owner',
+      passwordHash,
+    });
   }
 
-  console.log(`Found clinic: ${clinic.name} (${clinic.id})`);
+  console.log(`Using clinic: ${clinic.name} (${clinic.id})`);
 
   // Check if doctor exists
   let doctor = await db.query.doctors.findFirst({
