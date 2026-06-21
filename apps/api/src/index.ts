@@ -4,6 +4,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
+import { migrate } from 'drizzle-orm/node-postgres/migrator';
+import path from 'path';
+import { db, pool } from './db/client';
 
 import { AppError } from './lib/errors';
 
@@ -120,9 +123,24 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
 
 const PORT = process.env.PORT || 4000;
 
-app.listen(PORT, () => {
-  console.log(`🚀 API server running on http://localhost:${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+// ─── Auto-migrate on startup ──────────────────────────────────────────────────
+async function startServer() {
+  try {
+    // In production (dist/index.js), migrations are at dist/db/migrations
+    // In dev (tsx src/index.ts), migrations are at src/db/migrations
+    const migrationsFolder = path.join(__dirname, 'db', 'migrations');
+    await migrate(db, { migrationsFolder });
+    console.log('✅ Database migrations applied');
+  } catch (err) {
+    console.warn('⚠️ Could not run migrations automatically:', err);
+  }
+
+  app.listen(PORT, () => {
+    console.log(`🚀 API server running on http://localhost:${PORT}`);
+    console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+  });
+}
+
+startServer();
 
 export default app;
