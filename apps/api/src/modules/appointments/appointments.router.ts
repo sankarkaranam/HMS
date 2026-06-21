@@ -170,7 +170,7 @@ router.post('/clinics/:clinicId/book',
         patientId: patient.id,
         appointmentDatetime: slotDatetime,
         durationMinutes: doctor.bufferTimeBetweenSlots ?? 15,
-        status: Number(doctor.consultationFee) === 0 ? 'confirmed' : 'pending_payment',
+        status: (Number(doctor.consultationFee) === 0 || clinic.paymentGateway === 'free') ? 'confirmed' : 'pending_payment',
         consultationType,
         consultationFeeSnapshot: doctor.consultationFee,
         notes,
@@ -181,8 +181,8 @@ router.post('/clinics/:clinicId/book',
         .set({ lastAppointmentAt: slotDatetime, updatedAt: new Date() })
         .where(eq(patients.id, patient.id));
 
-      // 6. For free consultations — confirm immediately and send email
-      if (Number(doctor.consultationFee) === 0) {
+      // 6. For free consultations or free gateways — confirm immediately and send email
+      if (Number(doctor.consultationFee) === 0 || clinic.paymentGateway === 'free') {
         await emailQueue.add('send_confirmation', {
           type: 'appointment_confirmation',
           appointmentId: appointment.id,

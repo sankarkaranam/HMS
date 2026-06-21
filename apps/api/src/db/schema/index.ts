@@ -121,7 +121,7 @@ export const clinics = pgTable('clinics', {
   subscriptionExpiresAt: timestamp('subscription_expires_at', { withTimezone: true }),
 
   // Payment gateway (pluggable — each clinic uses their own)
-  paymentGateway: paymentGatewayEnum('payment_gateway').default('razorpay'),
+  paymentGateway: paymentGatewayEnum('payment_gateway').default('free'),
   // Stored encrypted via pgcrypto in application layer before saving
   paymentGatewayKeyEncrypted: text('payment_gateway_key_encrypted'),
   paymentGatewaySecretEncrypted: text('payment_gateway_secret_encrypted'),

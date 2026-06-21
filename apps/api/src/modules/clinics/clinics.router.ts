@@ -16,7 +16,7 @@ const router: Router = Router();
 const createClinicSchema = z.object({
   name: z.string().min(2).max(255),
   slug: z.string().min(2).max(100).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase letters, numbers, hyphens only'),
-  phone: z.string().regex(/^\+?[0-9]{10,15}$/).optional(),
+  phone: z.string().regex(/^\+?[0-9\s-]{10,20}$/, 'Invalid phone number format').optional(),
   email: z.string().email().optional(),
   address: z.string().optional(),
   timezone: z.string().default('Asia/Kolkata'),
@@ -28,7 +28,7 @@ const createClinicSchema = z.object({
 
 const updateClinicSchema = z.object({
   name: z.string().min(2).max(255).optional(),
-  phone: z.string().regex(/^\+?[0-9]{10,15}$/).optional(),
+  phone: z.string().regex(/^\+?[0-9\s-]{10,20}$/, 'Invalid phone number format').optional(),
   email: z.string().email().optional(),
   address: z.string().optional(),
   timezone: z.string().optional(),
