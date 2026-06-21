@@ -44,6 +44,10 @@ app.use(cors({
     if (origin.endsWith('.vercel.app')) {
       return callback(null, true);
     }
+    // Allow sriswethaclinic.com and all its subdomains (like book.sriswethaclinic.com)
+    if (origin.endsWith('sriswethaclinic.com')) {
+      return callback(null, true);
+    }
     // Allow explicitly listed origins from env
     if (explicitOrigins.includes(origin)) {
       return callback(null, true);
