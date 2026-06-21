@@ -2,11 +2,12 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { eq, and, gte, lte, desc, inArray, sql } from 'drizzle-orm';
 import { addMinutes } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 import { db } from '../../db/client';
 import {
   appointments, patients, doctors, clinics, clinicGroups,
-  payments, appointmentReminders,
+  payments, appointmentReminders, doctorAvailability,
 } from '../../db/schema';
 import { validate, validateQuery } from '../../middleware/validate';
 import { authMiddleware, requireRole, AuthenticatedRequest } from '../../middleware/auth';
@@ -163,13 +164,38 @@ router.post('/clinics/:clinicId/book',
         }).returning();
       }
 
+      // Get day of week for availability
+      const timezone = clinic.timezone || 'Asia/Kolkata';
+      const localDate = toZonedTime(slotDatetime, timezone);
+      const dayOfWeekNum = localDate.getDay().toString(); // 0=sun
+      const DAY_MAP: Record<string, 'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday'> = {
+        '0': 'sunday',
+        '1': 'monday',
+        '2': 'tuesday',
+        '3': 'wednesday',
+        '4': 'thursday',
+        '5': 'friday',
+        '6': 'saturday',
+      };
+      const dayOfWeek = DAY_MAP[dayOfWeekNum];
+
+      const availability = await db.query.doctorAvailability.findFirst({
+        where: and(
+          eq(doctorAvailability.doctorId, doctorId),
+          eq(doctorAvailability.dayOfWeek, dayOfWeek),
+          eq(doctorAvailability.isActive, true),
+        ),
+      });
+
+      const slotDuration = availability?.slotDurationMinutes ?? 15;
+
       // 4. Create appointment
       const [appointment] = await db.insert(appointments).values({
         clinicId,
         doctorId,
         patientId: patient.id,
         appointmentDatetime: slotDatetime,
-        durationMinutes: doctor.bufferTimeBetweenSlots ?? 15,
+        durationMinutes: slotDuration,
         status: (Number(doctor.consultationFee) === 0 || clinic.paymentGateway === 'free') ? 'confirmed' : 'pending_payment',
         consultationType,
         consultationFeeSnapshot: doctor.consultationFee,
