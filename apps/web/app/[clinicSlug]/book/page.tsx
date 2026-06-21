@@ -262,7 +262,10 @@ export default function BookingPage() {
     }
   };
 
-  const isFreeBooking = Number(selectedDoctor?.consultationFee) === 0 || clinic?.paymentGateway === 'free';
+  // Teleconsult always requires online PhonePe payment if fee > 0
+  const isTeleconsultPaid = consultationType === 'teleconsult' && Number(selectedDoctor?.consultationFee) > 0;
+  const isFreeBooking = Number(selectedDoctor?.consultationFee) === 0 || (clinic?.paymentGateway === 'free' && !isTeleconsultPaid);
+  const isOnlinePayment = Number(selectedDoctor?.consultationFee) > 0 && !isFreeBooking;
 
   // ─── Loading ────────────────────────────────────────────────────────────────
   if (verifyingPayment) {
@@ -664,18 +667,31 @@ export default function BookingPage() {
                 <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.55rem', fontWeight: '600' }}>Consultation Mode</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
                   {[
-                    { value: 'in_person', label: '🏥 In Clinic', icon: Building2 },
-                    { value: 'teleconsult', label: '💻 Teleconsult', icon: Activity },
-                  ].map(({ value, label }) => {
+                    { value: 'in_person', label: '🏥 In Clinic', sub: clinic?.paymentGateway === 'free' ? 'Pay at clinic' : 'Online payment' },
+                    { value: 'teleconsult', label: '💻 Teleconsult', sub: 'Online payment req.' },
+                  ].map(({ value, label, sub }) => {
                     const isActive = consultationType === value;
+                    const isPayOnline = value === 'teleconsult' && Number(selectedDoctor?.consultationFee) > 0;
                     return (
                       <button key={value} type="button" onClick={() => setConsultationType(value as any)}
-                        style={{ padding: '0.75rem 0.5rem', borderRadius: 'var(--radius-sm)', background: isActive ? 'rgba(99,102,241,0.1)' : 'rgba(30,41,59,0.4)', border: isActive ? '2px solid var(--primary)' : '1px solid rgba(255,255,255,0.07)', color: isActive ? 'var(--primary-light)' : 'var(--text-muted)', fontWeight: '700', fontSize: '0.8rem', cursor: 'pointer', transition: 'all 0.18s', fontFamily: 'Inter, inherit' }}>
+                        style={{ padding: '0.65rem 0.5rem', borderRadius: 'var(--radius-sm)', background: isActive ? 'rgba(99,102,241,0.1)' : 'rgba(30,41,59,0.4)', border: isActive ? '2px solid var(--primary)' : '1px solid rgba(255,255,255,0.07)', color: isActive ? 'var(--primary-light)' : 'var(--text-muted)', fontWeight: '700', fontSize: '0.8rem', cursor: 'pointer', transition: 'all 0.18s', fontFamily: 'Inter, inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                         {label}
+                        <span style={{ fontSize: '0.62rem', fontWeight: '600', color: isPayOnline ? (isActive ? 'var(--warning)' : 'var(--warning)') : (isActive ? 'rgba(129,140,248,0.7)' : 'var(--text-subtle)'), opacity: 0.9 }}>
+                          {isPayOnline ? '⚡ PhonePe required' : sub}
+                        </span>
                       </button>
                     );
                   })}
                 </div>
+                {/* Teleconsult info banner */}
+                {consultationType === 'teleconsult' && Number(selectedDoctor?.consultationFee) > 0 && (
+                  <div className="animate-in" style={{ marginTop: '0.6rem', display: 'flex', alignItems: 'flex-start', gap: '8px', background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: 'var(--radius-xs)', padding: '0.65rem 0.85rem' }}>
+                    <span style={{ fontSize: '0.95rem', flexShrink: 0 }}>⚡</span>
+                    <p style={{ fontSize: '0.76rem', color: '#fbbf24', lineHeight: '1.45', margin: 0 }}>
+                      <strong>Online payment required</strong> for teleconsult. You'll be redirected to PhonePe to complete payment.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Notes */}
@@ -689,27 +705,33 @@ export default function BookingPage() {
 
               {/* Booking Summary */}
               {selectedDoctor && selectedSlot && (
-                <div className="animate-in" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 'var(--radius-sm)', padding: '1.1rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                <div className="animate-in" style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${isTeleconsultPaid ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.06)'}`, borderRadius: 'var(--radius-sm)', padding: '1.1rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                   {[
                     { label: '🥼 Doctor', value: selectedDoctor.name },
                     { label: '📅 Date', value: new Date(selectedSlot).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) },
                     { label: '🕐 Time', value: new Date(selectedSlot).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) },
-                    { label: '💬 Mode', value: consultationType === 'in_person' ? 'In Clinic' : 'Teleconsult' },
+                    { label: '💬 Mode', value: consultationType === 'in_person' ? 'In Clinic' : '💻 Teleconsult' },
                   ].map(({ label, value }) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                       <span>{label}</span>
                       <span style={{ fontWeight: '600', color: 'var(--text)' }}>{value}</span>
                     </div>
                   ))}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.6rem', marginTop: '0.2rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.6rem', marginTop: '0.2rem', alignItems: 'center' }}>
                     <span style={{ fontWeight: '700', color: 'var(--text)' }}>Total</span>
-                    <span style={{ fontWeight: '900', color: 'var(--success)', fontSize: '1.05rem' }}>
-                      {Number(selectedDoctor.consultationFee) === 0
-                        ? 'FREE'
-                        : clinic?.paymentGateway === 'free'
-                          ? `₹${selectedDoctor.consultationFee} (Pay at Clinic)`
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontWeight: '900', fontSize: '1.05rem', color: Number(selectedDoctor.consultationFee) === 0 ? 'var(--success)' : isTeleconsultPaid ? '#fbbf24' : 'var(--success)' }}>
+                        {Number(selectedDoctor.consultationFee) === 0
+                          ? 'FREE'
                           : `₹${selectedDoctor.consultationFee}`}
-                    </span>
+                      </span>
+                      {isTeleconsultPaid && (
+                        <span style={{ display: 'block', fontSize: '0.66rem', color: '#f59e0b', fontWeight: '600', marginTop: '1px' }}>⚡ Online via PhonePe</span>
+                      )}
+                      {!isTeleconsultPaid && clinic?.paymentGateway === 'free' && Number(selectedDoctor.consultationFee) > 0 && (
+                        <span style={{ display: 'block', fontSize: '0.66rem', color: 'var(--text-subtle)', marginTop: '1px' }}>Pay at clinic</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -753,10 +775,12 @@ export default function BookingPage() {
                   'Select a Time Slot to Book'
                 ) : !name || !phone ? (
                   'Enter Your Details'
+                ) : isTeleconsultPaid ? (
+                  `⚡ Pay ₹${selectedDoctor?.consultationFee} via PhonePe`
                 ) : isFreeBooking ? (
                   Number(selectedDoctor?.consultationFee) === 0
                     ? '✓ Confirm Appointment (Free)'
-                    : `✓ Confirm Appointment (₹${selectedDoctor?.consultationFee} · Pay at Clinic)`
+                    : `✓ Confirm — Pay ₹${selectedDoctor?.consultationFee} at Clinic`
                 ) : (
                   `Pay ₹${selectedDoctor?.consultationFee} & Confirm`
                 )}

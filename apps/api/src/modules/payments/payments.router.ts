@@ -191,8 +191,13 @@ router.post('/create-order', validate(createOrderSchema),
       const amountPaise = Math.round(Number(apt.consultationFeeSnapshot) * 100);
       const frontendOrigin = process.env.ALLOWED_ORIGINS?.split(',')[0] || 'http://localhost:3000';
 
+      // Teleconsult always routes through PhonePe for online pre-payment,
+      // even if the clinic's default gateway is 'free' (walk-in).
+      const isTeleconsult = apt.consultationType === 'teleconsult';
+      const usePhonePe = clinic.paymentGateway === 'phonepe' || isTeleconsult;
+
       // ── PhonePe V2 ──────────────────────────────────────────────────────────
-      if (clinic.paymentGateway === 'phonepe') {
+      if (usePhonePe) {
         const creds = await getPhonePeV2Creds(apt.clinicId);
         const accessToken = await getPhonePeV2Token(creds.clientId, creds.clientSecret, creds.clientVersion, creds.env);
 

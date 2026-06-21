@@ -196,7 +196,12 @@ router.post('/clinics/:clinicId/book',
         patientId: patient.id,
         appointmentDatetime: slotDatetime,
         durationMinutes: slotDuration,
-        status: (Number(doctor.consultationFee) === 0 || clinic.paymentGateway === 'free') ? 'confirmed' : 'pending_payment',
+        // Teleconsult always requires online payment regardless of gateway setting
+        status: (Number(doctor.consultationFee) === 0)
+          ? 'confirmed'
+          : (consultationType === 'teleconsult')
+            ? 'pending_payment'
+            : (clinic.paymentGateway === 'free' ? 'confirmed' : 'pending_payment'),
         consultationType,
         consultationFeeSnapshot: doctor.consultationFee,
         notes,
@@ -207,8 +212,13 @@ router.post('/clinics/:clinicId/book',
         .set({ lastAppointmentAt: slotDatetime, updatedAt: new Date() })
         .where(eq(patients.id, patient.id));
 
-      // 6. For free consultations or free gateways — confirm immediately and send email
-      if (Number(doctor.consultationFee) === 0 || clinic.paymentGateway === 'free') {
+      // 6. Confirm immediately for: free consultations OR (free gateway + in_person)
+      //    Teleconsult always waits for online payment regardless of gateway.
+      const isImmediatelyConfirmed =
+        Number(doctor.consultationFee) === 0 ||
+        (clinic.paymentGateway === 'free' && consultationType !== 'teleconsult');
+
+      if (isImmediatelyConfirmed) {
         await emailQueue.add('send_confirmation', {
           type: 'appointment_confirmation',
           appointmentId: appointment.id,
@@ -239,7 +249,10 @@ router.post('/clinics/:clinicId/book',
           name: patient.name,
           phone: patient.phone,
         },
-        paymentRequired: Number(doctor.consultationFee) > 0 && clinic.paymentGateway !== 'free',
+        // Teleconsult always needs online payment; in-person respects paymentGateway
+        paymentRequired:
+          Number(doctor.consultationFee) > 0 &&
+          (consultationType === 'teleconsult' || clinic.paymentGateway !== 'free'),
         consultationFee: doctor.consultationFee,
         currency: 'INR',
       });
