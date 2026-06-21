@@ -96,7 +96,6 @@ async function getPhonePeV2Creds(clinicId: string): Promise<PhonePeV2Creds> {
   const envClientId = process.env.PHONEPE_CLIENT_ID;
   const envClientSecret = process.env.PHONEPE_CLIENT_SECRET;
   const envClientVersion = process.env.PHONEPE_CLIENT_VERSION || '1';
-  // env var controls mode only for the .env fallback path
   const envMode = process.env.PHONEPE_ENV || 'production';
 
   const clinic = await db.query.clinics.findFirst({
@@ -104,7 +103,7 @@ async function getPhonePeV2Creds(clinicId: string): Promise<PhonePeV2Creds> {
   });
   if (!clinic) throw new AppError('Clinic not found', 404);
 
-  // If clinic has DB credentials saved via Settings page — always production
+  // If clinic has DB credentials saved via Settings page
   if (clinic.paymentGateway === 'phonepe' && clinic.paymentGatewayKeyEncrypted && clinic.paymentGatewaySecretEncrypted) {
     try {
       const clientId = Buffer.from(clinic.paymentGatewayKeyEncrypted, 'base64').toString('utf-8');
@@ -118,9 +117,18 @@ async function getPhonePeV2Creds(clinicId: string): Promise<PhonePeV2Creds> {
         clientVersion = parsed.clientVersion || parsed.saltIndex || '1';
       }
 
-      // Keys saved via the admin Settings page are always treated as production
-      console.log(`[PhonePe] Using DB credentials for clinic ${clinicId} → production mode`);
-      return { clientId, clientSecret, clientVersion, env: 'production' };
+      // Dynamically detect UAT / Sandbox mode
+      const isSandbox = envMode === 'sandbox' || 
+        clientId.toLowerCase().includes('test') || 
+        clientId.toLowerCase().includes('uat') || 
+        clientId.toLowerCase().includes('sandbox') ||
+        clientId === 'M23667ZTWVUU4_2602051256' ||
+        (envClientId && clientId === envClientId);
+
+      const targetEnv = isSandbox ? 'sandbox' : 'production';
+      console.log(`[PhonePe] Using DB credentials for clinic ${clinicId} → ${targetEnv} mode`);
+
+      return { clientId, clientSecret, clientVersion, env: targetEnv };
     } catch (e) {
       // fall through to env vars
     }
