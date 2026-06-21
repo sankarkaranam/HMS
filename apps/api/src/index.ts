@@ -23,8 +23,30 @@ const app: Application = express();
 // ─── Security Middleware ──────────────────────────────────────────────────────
 
 app.use(helmet());
+
+// Dynamic CORS: allow localhost, all *.vercel.app preview deployments, and any explicitly listed origins
+const explicitOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+  : [];
+
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, Postman, server-to-server)
+    if (!origin) return callback(null, true);
+    // Allow localhost for local dev
+    if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
+      return callback(null, true);
+    }
+    // Allow all Vercel preview + production deployments
+    if (origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+    // Allow explicitly listed origins from env
+    if (explicitOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS: Origin ${origin} not allowed`));
+  },
   credentials: true,
 }));
 
