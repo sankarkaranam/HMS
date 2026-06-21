@@ -239,7 +239,7 @@ router.post('/clinics/:clinicId/book',
           name: patient.name,
           phone: patient.phone,
         },
-        paymentRequired: Number(doctor.consultationFee) > 0,
+        paymentRequired: Number(doctor.consultationFee) > 0 && clinic.paymentGateway !== 'free',
         consultationFee: doctor.consultationFee,
         currency: 'INR',
       });
