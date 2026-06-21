@@ -121,14 +121,12 @@ router.post('/clinics/:clinicId/book',
       if (slotDatetime <= new Date()) throw new AppError('Cannot book a past appointment', 400);
 
       // 2. Check for slot conflict (race condition prevention)
-      const conflict = await db.query.appointments.findFirst({
+      const existingApt = await db.query.appointments.findFirst({
         where: and(
           eq(appointments.doctorId, doctorId),
           eq(appointments.appointmentDatetime, slotDatetime),
-          inArray(appointments.status, ['confirmed', 'pending_payment']),
         ),
       });
-      if (conflict) throw new AppError('This slot is no longer available. Please choose another.', 409);
 
       // 3. Upsert patient within the clinic group
       const existingPatient = await db.query.patients.findFirst({
@@ -137,6 +135,25 @@ router.post('/clinics/:clinicId/book',
           eq(patients.phone, patientData.phone),
         ),
       });
+
+      if (existingApt) {
+        let isConflict = false;
+
+        if (existingApt.status === 'confirmed') {
+          isConflict = true;
+        } else if (existingApt.status === 'pending_payment') {
+          const isSamePatient = existingPatient && existingApt.patientId === existingPatient.id;
+          const isStale = new Date().getTime() - new Date(existingApt.createdAt).getTime() > 15 * 60 * 1000;
+
+          if (!isSamePatient && !isStale) {
+            isConflict = true; // Blocked for another patient currently paying
+          }
+        }
+
+        if (isConflict) {
+          throw new AppError('This slot is no longer available. Please choose another.', 409);
+        }
+      }
 
       let patient;
       if (existingPatient) {
@@ -189,23 +206,44 @@ router.post('/clinics/:clinicId/book',
 
       const slotDuration = availability?.slotDurationMinutes ?? 15;
 
-      // 4. Create appointment
-      const [appointment] = await db.insert(appointments).values({
-        clinicId,
-        doctorId,
-        patientId: patient.id,
-        appointmentDatetime: slotDatetime,
-        durationMinutes: slotDuration,
-        // Teleconsult always requires online payment regardless of gateway setting
-        status: (Number(doctor.consultationFee) === 0)
-          ? 'confirmed'
-          : (consultationType === 'teleconsult')
-            ? 'pending_payment'
-            : (clinic.paymentGateway === 'free' ? 'confirmed' : 'pending_payment'),
-        consultationType,
-        consultationFeeSnapshot: doctor.consultationFee,
-        notes,
-      }).returning();
+      const targetStatus = (Number(doctor.consultationFee) === 0)
+        ? 'confirmed'
+        : (consultationType === 'teleconsult')
+          ? 'pending_payment'
+          : (clinic.paymentGateway === 'free' ? 'confirmed' : 'pending_payment');
+
+      // 4. Create or reuse appointment
+      let appointment;
+      if (existingApt) {
+        // Reuse existing row to prevent unique constraint violation (doctorSlotUnique)
+        [appointment] = await db.update(appointments).set({
+          patientId: patient.id,
+          durationMinutes: slotDuration,
+          status: targetStatus,
+          consultationType,
+          consultationFeeSnapshot: doctor.consultationFee,
+          notes: notes || null,
+          cancellationReason: null,
+          cancelledAt: null,
+          cancelledBy: null,
+          createdAt: new Date(), // Reset timestamp for payment expiration window
+          updatedAt: new Date(),
+        })
+        .where(eq(appointments.id, existingApt.id))
+        .returning();
+      } else {
+        [appointment] = await db.insert(appointments).values({
+          clinicId,
+          doctorId,
+          patientId: patient.id,
+          appointmentDatetime: slotDatetime,
+          durationMinutes: slotDuration,
+          status: targetStatus,
+          consultationType,
+          consultationFeeSnapshot: doctor.consultationFee,
+          notes,
+        }).returning();
+      }
 
       // 5. Update patient's last appointment time
       await db.update(patients)
