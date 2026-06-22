@@ -43,6 +43,22 @@ export default function SuperAdminDashboardPage() {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
+  // Edit Modal state
+  const [editingClinic, setEditingClinic] = useState<Clinic | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editSlug, setEditSlug] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editAddress, setEditAddress] = useState('');
+  const [editIsActive, setEditIsActive] = useState(true);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  // Delete Modal state
+  const [deletingClinic, setDeletingClinic] = useState<Clinic | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   // Success State Modal
   const [onboardedClinic, setOnboardedClinic] = useState<any | null>(null);
 
@@ -181,6 +197,92 @@ export default function SuperAdminDashboardPage() {
     }
   };
 
+  const handleEditClick = (c: Clinic) => {
+    setEditingClinic(c);
+    setEditName(c.name);
+    setEditSlug(c.slug);
+    setEditPhone(c.phone || '');
+    setEditEmail(c.email || '');
+    setEditAddress(c.address || '');
+    setEditIsActive(c.isActive);
+    setEditError(null);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingClinic) return;
+    if (!editName || !editSlug) {
+      setEditError('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setEditLoading(true);
+      setEditError(null);
+
+      const res = await fetch(`${API_URL}/clinics/super-admin/clinics/${editingClinic.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: editName,
+          slug: editSlug,
+          phone: editPhone || null,
+          email: editEmail || null,
+          address: editAddress || null,
+          isActive: editIsActive,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to update clinic');
+      }
+
+      setEditingClinic(null);
+      fetchClinics();
+    } catch (err: any) {
+      setEditError(err.message || 'Error occurred during update');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleDeleteClick = (c: Clinic) => {
+    setDeletingClinic(c);
+    setDeleteError(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingClinic) return;
+
+    try {
+      setDeleteLoading(true);
+      setDeleteError(null);
+
+      const res = await fetch(`${API_URL}/clinics/super-admin/clinics/${deletingClinic.id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to delete clinic');
+      }
+
+      setDeletingClinic(null);
+      fetchClinics();
+    } catch (err: any) {
+      setDeleteError(err.message || 'Error occurred during deletion');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('superAccessToken');
     localStorage.removeItem('superAdminEmail');
@@ -258,7 +360,7 @@ export default function SuperAdminDashboardPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
           <div className="glass" style={{ padding: '1.5rem 2rem' }}>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600' }}>Active Hospitals</div>
-            <div style={{ fontSize: '2.5rem', fontWeight: '800', marginTop: '0.5rem', color: 'var(--accent)' }}>{clinics.length}</div>
+            <div style={{ fontSize: '2.5rem', fontWeight: '800', marginTop: '0.5rem', color: 'var(--accent)' }}>{clinics.filter(c => c.isActive).length}</div>
           </div>
           <div className="glass" style={{ padding: '1.5rem 2rem' }}>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600' }}>Total Platforms Onboarded</div>
@@ -298,6 +400,7 @@ export default function SuperAdminDashboardPage() {
                     <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Booking Link</th>
                     <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Status</th>
                     <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'right' }}>Registered Date</th>
+                    <th style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -321,6 +424,53 @@ export default function SuperAdminDashboardPage() {
                       </td>
                       <td style={{ padding: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'right' }}>
                         {new Date(c.createdAt).toLocaleDateString(undefined, { dateStyle: 'medium' })}
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <button
+                          onClick={() => handleEditClick(c)}
+                          style={{
+                            background: 'rgba(6,182,212,0.15)',
+                            border: '1px solid rgba(6,182,212,0.3)',
+                            color: 'var(--accent)',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                            fontSize: '0.8rem',
+                            marginRight: '8px',
+                            transition: 'all 0.2s',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(6,182,212,0.25)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(6,182,212,0.15)';
+                          }}
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(c)}
+                          style={{
+                            background: 'rgba(239,68,68,0.15)',
+                            border: '1px solid rgba(239,68,68,0.3)',
+                            color: 'var(--danger)',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                            fontSize: '0.8rem',
+                            transition: 'all 0.2s',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(239,68,68,0.25)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(239,68,68,0.15)';
+                          }}
+                        >
+                          🗑️ Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -542,6 +692,206 @@ export default function SuperAdminDashboardPage() {
               >
                 Close & Return
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* EDIT CLINIC MODAL */}
+        {editingClinic && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
+            <div className="glass animate-in" style={{ padding: '2.5rem', maxWidth: '640px', width: '100%', maxHeight: '90vh', overflowY: 'auto', background: 'rgba(30, 41, 59, 0.95)', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>Edit Hospital Tenant</h2>
+                <button onClick={() => setEditingClinic(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+              </div>
+
+              {editError && (
+                <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+                  ⚠️ {editError}
+                </div>
+              )}
+
+              <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--accent)', borderBottom: '1px solid var(--border)', paddingBottom: '0.25rem' }}>🏥 Hospital Details</h3>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: '500' }}>Hospital/Clinic Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder="e.g. Apollo Specialities"
+                      className="premium-input"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: '500' }}>URL Slug *</label>
+                    <input
+                      type="text"
+                      required
+                      value={editSlug}
+                      onChange={(e) => setEditSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                      placeholder="e.g. apollo-specialities"
+                      className="premium-input"
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: '500' }}>Phone</label>
+                    <input
+                      type="tel"
+                      value={editPhone}
+                      onChange={(e) => setEditPhone(e.target.value)}
+                      placeholder="e.g. +91 98765 43210"
+                      className="premium-input"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: '500' }}>Clinic Public Email</label>
+                    <input
+                      type="email"
+                      value={editEmail}
+                      onChange={(e) => setEditEmail(e.target.value)}
+                      placeholder="info@apollo.com"
+                      className="premium-input"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: '500' }}>Address</label>
+                  <textarea
+                    value={editAddress}
+                    onChange={(e) => setEditAddress(e.target.value)}
+                    placeholder="Physical address"
+                    className="premium-input"
+                    rows={2}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: '500' }}>Tenant Status</label>
+                  <select
+                    value={editIsActive ? 'active' : 'suspended'}
+                    onChange={(e) => setEditIsActive(e.target.value === 'active')}
+                    className="premium-input"
+                    style={{ height: '45px' }}
+                  >
+                    <option value="active">Active (Onboarding Open & Booking Allowed)</option>
+                    <option value="suspended">Suspended (All Bookings & Public URLs Blocked)</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setEditingClinic(null)}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '8px',
+                      background: 'rgba(255,255,255,0.08)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--text)',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={editLoading}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '8px',
+                      background: 'linear-gradient(135deg, var(--accent), var(--primary))',
+                      border: 'none',
+                      color: '#fff',
+                      fontWeight: '700',
+                      cursor: editLoading ? 'not-allowed' : 'pointer',
+                      boxShadow: '0 8px 24px rgba(6,182,212,0.3)',
+                    }}
+                  >
+                    {editLoading ? 'Updating Tenant...' : 'Save Changes'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* DELETE CONFIRMATION MODAL */}
+        {deletingClinic && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
+            <div className="glass animate-in" style={{ padding: '2.5rem', maxWidth: '480px', width: '100%', background: 'rgba(30, 41, 59, 0.98)', border: '1px solid rgba(239,68,68,0.3)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.35rem', fontWeight: '800', color: 'var(--danger)' }}>Confirm Deletion</h2>
+                <button onClick={() => setDeletingClinic(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+              </div>
+
+              {deleteError && (
+                <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+                  ⚠️ {deleteError}
+                </div>
+              )}
+
+              <p style={{ color: 'var(--text)', marginBottom: '1.5rem', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                Are you sure you want to delete <strong>{deletingClinic.name}</strong>?
+              </p>
+
+              <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '8px', padding: '1rem', marginBottom: '2rem', fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+                <strong>⚠️ Warning:</strong> This operation is permanent and irreversible. It will delete all linked:
+                <ul style={{ paddingLeft: '1.25rem', marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <li>Staff administrator & staff member accounts</li>
+                  <li>Doctors profile & dynamic schedules/breaks</li>
+                  <li>Patient bookings & appointments history</li>
+                  <li>Payments transactions records</li>
+                  <li>API integrations & configured webhooks</li>
+                </ul>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setDeletingClinic(null)}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    borderRadius: '8px',
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text)',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteConfirm}
+                  disabled={deleteLoading}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    borderRadius: '8px',
+                    background: 'var(--danger)',
+                    border: 'none',
+                    color: '#fff',
+                    fontWeight: '700',
+                    cursor: deleteLoading ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 4px 16px rgba(239,68,68,0.3)',
+                  }}
+                >
+                  {deleteLoading ? 'Deleting...' : 'Delete Permanently'}
+                </button>
+              </div>
             </div>
           </div>
         )}

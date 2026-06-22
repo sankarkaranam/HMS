@@ -1,8 +1,8 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import { db } from '../../db/client';
-import { clinics, clinicGroups, clinicStaff, doctors } from '../../db/schema';
+import { clinics, clinicGroups, clinicStaff, doctors, payments, appointments, appointmentReminders } from '../../db/schema';
 import { validate } from '../../middleware/validate';
 import { authMiddleware, requireRole, requireClinicAccess, AuthenticatedRequest } from '../../middleware/auth';
 import { AppError } from '../../lib/errors';
@@ -37,6 +37,15 @@ const updateClinicSchema = z.object({
   // Accept raw keys — we'll encrypt before storing
   paymentGatewayKey: z.string().optional(),
   paymentGatewaySecret: z.string().optional(),
+});
+
+const updateClinicSuperAdminSchema = z.object({
+  name: z.string().min(2).max(255).optional(),
+  slug: z.string().min(2).max(100).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase letters, numbers, hyphens only').optional(),
+  phone: z.string().regex(/^\+?[0-9\s-]{10,20}$/, 'Invalid phone number format').optional().nullable(),
+  email: z.string().email().optional().nullable(),
+  address: z.string().optional().nullable(),
+  isActive: z.boolean().optional(),
 });
 
 // ─── POST /clinics — Public signup (create clinic + owner account) ────────────
@@ -294,6 +303,85 @@ router.post('/super-admin/clinics', authMiddleware, requireRole('super_admin'), 
       slug: result.clinic.slug,
       bookingUrl: `/book/${result.clinic.slug}`,
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── PUT /clinics/super-admin/clinics/:id — SaaS super-admin update clinic ─────
+
+router.put('/super-admin/clinics/:id', authMiddleware, requireRole('super_admin'), validate(updateClinicSuperAdminSchema), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const id = req.params.id as string;
+    const { name, slug, phone, email, address, isActive } = req.body;
+
+    const clinic = await db.query.clinics.findFirst({
+      where: eq(clinics.id, id),
+    });
+    if (!clinic) throw new AppError('Clinic not found', 404);
+
+    if (slug) {
+      const existing = await db.query.clinics.findFirst({
+        where: and(eq(clinics.slug, slug), sql`${clinics.id} != ${id}`),
+      });
+      if (existing) throw new AppError('This URL slug is already taken. Please choose another.', 409);
+    }
+
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (slug !== undefined) updateData.slug = slug;
+    if (phone !== undefined) updateData.phone = phone;
+    if (email !== undefined) updateData.email = email;
+    if (address !== undefined) updateData.address = address;
+    if (isActive !== undefined) updateData.isActive = isActive;
+    updateData.updatedAt = new Date();
+
+    const [updated] = await db
+      .update(clinics)
+      .set(updateData)
+      .where(eq(clinics.id, id))
+      .returning();
+
+    return res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── DELETE /clinics/super-admin/clinics/:id — SaaS super-admin delete clinic ──
+
+router.delete('/super-admin/clinics/:id', authMiddleware, requireRole('super_admin'), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const id = req.params.id as string;
+
+    const clinic = await db.query.clinics.findFirst({
+      where: eq(clinics.id, id),
+    });
+    if (!clinic) throw new AppError('Clinic not found', 404);
+
+    await db.transaction(async (tx) => {
+      // 1. Delete payments associated with this clinic
+      await tx.delete(payments).where(eq(payments.clinicId, id));
+
+      // 2. Delete reminders for this clinic's appointments
+      const appts = await tx.select({ id: appointments.id }).from(appointments).where(eq(appointments.clinicId, id));
+      const apptIds = appts.map(a => a.id);
+      if (apptIds.length > 0) {
+        await tx.delete(appointmentReminders).where(inArray(appointmentReminders.appointmentId, apptIds));
+        // 3. Delete appointments for this clinic
+        await tx.delete(appointments).where(eq(appointments.clinicId, id));
+      }
+
+      // 4. Delete the clinic (cascades to staff, doctors, clinicWebhooks, etc.)
+      const [deletedClinic] = await tx.delete(clinics).where(eq(clinics.id, id)).returning();
+
+      // 5. Delete standalone clinic group if it exists
+      if (deletedClinic?.groupId) {
+        await tx.delete(clinicGroups).where(eq(clinicGroups.id, deletedClinic.groupId));
+      }
+    });
+
+    return res.json({ success: true, message: 'Clinic and all associated data deleted successfully.' });
   } catch (err) {
     next(err);
   }
