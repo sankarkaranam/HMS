@@ -210,7 +210,10 @@ export default function BookingPage() {
         const orderRes = await fetch(`${API_URL}/payments/create-order`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ appointmentId: data.appointment.id }),
+          body: JSON.stringify({
+            appointmentId: data.appointment.id,
+            origin: window.location.origin,
+          }),
         });
         const orderData = await orderRes.json();
         if (!orderRes.ok) throw new Error(orderData.error || 'Failed to create payment order');

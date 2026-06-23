@@ -162,6 +162,7 @@ async function getRazorpayCredentials(clinicId: string) {
 
 const createOrderSchema = z.object({
   appointmentId: z.string().uuid(),
+  origin: z.string().url().optional(),
 });
 
 const verifyPaymentSchema = z.object({
@@ -181,7 +182,7 @@ const verifyPhonepeSchema = z.object({
 router.post('/create-order', validate(createOrderSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { appointmentId } = req.body;
+      const { appointmentId, origin } = req.body;
 
       const apt = await db.query.appointments.findFirst({
         where: eq(appointments.id, appointmentId),
@@ -197,7 +198,25 @@ router.post('/create-order', validate(createOrderSchema),
       if (!clinic) throw new AppError('Clinic not found', 404);
 
       const amountPaise = Math.round(Number(apt.consultationFeeSnapshot) * 100);
-      const frontendOrigin = process.env.ALLOWED_ORIGINS?.split(',')[0] || 'http://localhost:3000';
+
+      // Dynamically resolve frontend origin to redirect back to the exact starting domain (custom domain or localhost)
+      let resolvedOrigin = 'http://localhost:3000';
+      if (origin) {
+        resolvedOrigin = origin;
+      } else {
+        const headerOrigin = req.headers.origin || req.headers.referer;
+        if (headerOrigin) {
+          try {
+            const parsed = new URL(headerOrigin);
+            resolvedOrigin = parsed.origin;
+          } catch {
+            resolvedOrigin = headerOrigin;
+          }
+        } else {
+          resolvedOrigin = process.env.ALLOWED_ORIGINS?.split(',')[0] || 'http://localhost:3000';
+        }
+      }
+      const frontendOrigin = resolvedOrigin.replace(/\/$/, '');
 
       // Teleconsult always routes through PhonePe for online pre-payment,
       // even if the clinic's default gateway is 'free' (walk-in).
