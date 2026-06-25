@@ -438,3 +438,7 @@ export const blockedSlotsRelations = relations(blockedSlots, ({ one }) => ({
   doctor: one(doctors, { fields: [blockedSlots.doctorId], references: [doctors.id] }),
 }));
 
+export const appointmentRemindersRelations = relations(appointmentReminders, ({ one }) => ({
+  appointment: one(appointments, { fields: [appointmentReminders.appointmentId], references: [appointments.id] }),
+}));
+
