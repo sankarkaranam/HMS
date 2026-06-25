@@ -152,7 +152,7 @@ export async function sendAppointmentConfirmationEmail(params: {
             <!-- Gradient Header Banner -->
             <div style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); padding: 32px; text-align: center; color: #ffffff;">
               <div style="display: inline-block; background-color: rgba(255, 255, 255, 0.15); border-radius: 50%; padding: 12px; margin-bottom: 16px;">
-                <span style="font-size: 32px; line-height: 1;">📅</span>
+                <span style="font-size: 32px; line-height: 1;">✅</span>
               </div>
               <h1 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">Appointment Confirmed!</h1>
               <p style="margin: 6px 0 0 0; font-size: 14px; opacity: 0.85; font-weight: 500;">Thank you for choosing ${clinicName}</p>
