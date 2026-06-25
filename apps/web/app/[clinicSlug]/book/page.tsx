@@ -380,7 +380,7 @@ export default function BookingPage() {
               onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
               onMouseLeave={e => e.currentTarget.style.transform = 'none'}
             >
-              🖨️ Print Ticket
+              🖨️ Print Appointment
             </button>
             <div style={{ display: 'flex', gap: '0.65rem' }}>
               <button onClick={() => setSuccessApt(null)} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', color: 'var(--text)', padding: '11px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem', transition: 'all 0.2s', fontFamily: 'Inter, inherit' }}
