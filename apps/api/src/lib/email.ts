@@ -10,10 +10,51 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+async function sendEmail(params: {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+  fromName: string;
+}): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (apiKey) {
+    console.log(`[Email] Dispatching via Resend API to: ${params.to}`);
+    const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.SMTP_USER || 'info@sriswethaclinic.com';
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: `"${params.fromName}" <${fromEmail}>`,
+        to: [params.to],
+        subject: params.subject,
+        html: params.html,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Resend API response error (${response.status}): ${JSON.stringify(errorData)}`);
+    }
+  } else {
+    console.log(`[Email] Dispatching via SMTP transporter to: ${params.to}`);
+    await transporter.sendMail({
+      from: `"${params.fromName}" <${process.env.SMTP_USER}>`,
+      to: params.to,
+      subject: params.subject,
+      html: params.html,
+      text: params.text,
+    });
+  }
+}
+
 export async function sendOtpEmail(to: string, otp: string, clinicName?: string): Promise<void> {
   const clinic = clinicName || 'Clinic';
-  await transporter.sendMail({
-    from: `"${clinic}" <${process.env.SMTP_USER}>`,
+  await sendEmail({
+    fromName: clinic,
     to,
     subject: `Your ${clinic} Login OTP — ${otp}`,
     html: `
@@ -38,7 +79,9 @@ export async function sendOtpEmail(to: string, otp: string, clinicName?: string)
     `,
     text: `Your login OTP: ${otp}\nExpires in 10 minutes.\nDo not share this.`,
   });
-}export async function sendAppointmentConfirmationEmail(params: {
+}
+
+export async function sendAppointmentConfirmationEmail(params: {
   to: string;
   patientName: string;
   doctorName: string;
@@ -88,8 +131,8 @@ export async function sendOtpEmail(to: string, otp: string, clinicName?: string)
     </div>
   ` : '';
 
-  await transporter.sendMail({
-    from: `"${clinicName}" <${process.env.SMTP_USER}>`,
+  await sendEmail({
+    fromName: clinicName,
     to,
     subject: `Appointment Confirmed at ${clinicName} — Dr. ${doctorName}`,
     html: `
@@ -192,8 +235,8 @@ export async function sendReminderEmail(params: {
     hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata',
   });
 
-  await transporter.sendMail({
-    from: `"${clinicName}" <${process.env.SMTP_USER}>`,
+  await sendEmail({
+    fromName: clinicName,
     to,
     subject: `⏰ Reminder: Appointment tomorrow at ${timeStr}`,
     html: `
