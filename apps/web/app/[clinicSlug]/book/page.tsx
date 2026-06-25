@@ -320,86 +320,180 @@ export default function BookingPage() {
     const aptTime = new Date(successApt.appointmentDatetime);
     const refId = successApt.id?.split('-')[0]?.toUpperCase() || '------';
     return (
-      <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem', background: 'var(--surface)', position: 'relative', overflow: 'hidden' }}>
-        {/* bg glow */}
-        <div style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%,-50%)', width: '700px', height: '700px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(16,185,129,0.07) 0%, transparent 70%)', pointerEvents: 'none', animation: 'glow-pulse 3s ease-in-out infinite' }} />
-        <div style={{ position: 'absolute', top: '20%', right: '10%', width: '300px', height: '300px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      <>
+        <main className="print:hidden" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem', background: 'var(--surface)', position: 'relative', overflow: 'hidden' }}>
+          {/* bg glow */}
+          <div style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%,-50%)', width: '700px', height: '700px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(16,185,129,0.07) 0%, transparent 70%)', pointerEvents: 'none', animation: 'glow-pulse 3s ease-in-out infinite' }} />
+          <div style={{ position: 'absolute', top: '20%', right: '10%', width: '300px', height: '300px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-        <div className="ticket-card animate-in-scale" style={{ maxWidth: '460px', width: '100%', zIndex: 1 }}>
-          <div className="ticket-punch-left" />
-          <div className="ticket-punch-right" />
+          <div className="ticket-card animate-in-scale" style={{ maxWidth: '460px', width: '100%', zIndex: 1 }}>
+            <div className="ticket-punch-left" />
+            <div className="ticket-punch-right" />
 
-          {/* Header */}
-          <div style={{ padding: '2.5rem 2rem 2rem', textAlign: 'center', borderBottom: '1px dashed rgba(255,255,255,0.08)' }}>
-            {/* success ring */}
-            <div style={{ position: 'relative', width: '72px', height: '72px', margin: '0 auto 1.5rem' }}>
-              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid rgba(16,185,129,0.3)', animation: 'ping 2s ease-out infinite' }} />
-              <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--success)', position: 'relative', zIndex: 1 }}>
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="check-draw">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
+            {/* Header */}
+            <div style={{ padding: '2.5rem 2rem 2rem', textAlign: 'center', borderBottom: '1px dashed rgba(255,255,255,0.08)' }}>
+              {/* success ring */}
+              <div style={{ position: 'relative', width: '72px', height: '72px', margin: '0 auto 1.5rem' }}>
+                <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid rgba(16,185,129,0.3)', animation: 'ping 2s ease-out infinite' }} />
+                <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--success)', position: 'relative', zIndex: 1 }}>
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="check-draw">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
               </div>
+              <h1 style={{ fontSize: '1.65rem', fontWeight: '900', marginBottom: '0.35rem', letterSpacing: '-0.5px' }}>Appointment Confirmed!</h1>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.5' }}>
+                {successApt.patient?.email ? <>Confirmation sent to <strong style={{ color: 'var(--text)' }}>{successApt.patient.email}</strong></> : <>Booking ID: <span style={{ fontFamily: 'monospace', color: 'var(--primary-light)', fontWeight: '700' }}>{refId}</span></>}
+              </p>
             </div>
-            <h1 style={{ fontSize: '1.65rem', fontWeight: '900', marginBottom: '0.35rem', letterSpacing: '-0.5px' }}>Appointment Confirmed!</h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.5' }}>
-              {successApt.patient?.email ? <>Confirmation sent to <strong style={{ color: 'var(--text)' }}>{successApt.patient.email}</strong></> : <>Booking ID: <span style={{ fontFamily: 'monospace', color: 'var(--primary-light)', fontWeight: '700' }}>{refId}</span></>}
-            </p>
-          </div>
 
-          {/* Body */}
-          <div style={{ padding: '1.75rem 2rem' }}>
-            {[
-              { label: 'Clinic', value: clinic?.name },
-              { label: 'Doctor', value: successApt.doctor?.name || 'Doctor' },
-              { label: 'Date', value: aptTime.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) },
-              { label: 'Time', value: aptTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) },
-              { label: 'Type', value: successApt.consultationType === 'in_person' ? '🏥 In Clinic' : '💻 Teleconsult' },
-              { label: 'Ref ID', value: refId, mono: true },
-            ].map(({ label, value, mono }) => (
-              <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{label}</span>
-                <span style={{ fontWeight: '600', fontSize: '0.88rem', color: mono ? 'var(--primary-light)' : 'var(--text)', fontFamily: mono ? 'monospace' : 'inherit', background: mono ? 'rgba(99,102,241,0.1)' : 'transparent', padding: mono ? '2px 8px' : '0', borderRadius: mono ? '4px' : '0' }}>
-                  {value}
+            {/* Body */}
+            <div style={{ padding: '1.75rem 2rem' }}>
+              {[
+                { label: 'Clinic', value: clinic?.name },
+                { label: 'Doctor', value: successApt.doctor?.name || 'Doctor' },
+                { label: 'Date', value: aptTime.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) },
+                { label: 'Time', value: aptTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) },
+                { label: 'Type', value: successApt.consultationType === 'in_person' ? '🏥 In Clinic' : '💻 Teleconsult' },
+                { label: 'Ref ID', value: refId, mono: true },
+              ].map(({ label, value, mono }) => (
+                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{label}</span>
+                  <span style={{ fontWeight: '600', fontSize: '0.88rem', color: mono ? 'var(--primary-light)' : 'var(--text)', fontFamily: mono ? 'monospace' : 'inherit', background: mono ? 'rgba(99,102,241,0.1)' : 'transparent', padding: mono ? '2px 8px' : '0', borderRadius: mono ? '4px' : '0' }}>
+                    {value}
+                  </span>
+                </div>
+              ))}
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 0 0', marginTop: '0.25rem' }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Status</span>
+                <span className="status-badge confirmed">
+                  <ShieldCheck size={11} /> Confirmed
                 </span>
               </div>
-            ))}
+          </div>
+            {/* Footer */}
+            <div style={{ padding: '1.25rem 2rem 2.25rem', borderTop: '1px dashed rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+              <button
+                onClick={() => window.print()}
+                style={{ width: '100%', background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))', color: '#fff', border: 'none', padding: '13px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: '700', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 6px 20px rgba(99,102,241,0.3)', transition: 'all 0.2s', fontFamily: 'Inter, inherit' }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+              >
+                🖨️ Print Appointment
+              </button>
+              <button 
+                onClick={() => { window.location.href = 'https://sriswethaclinic.com'; }} 
+                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', color: 'var(--text)', padding: '11px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem', transition: 'all 0.2s', fontFamily: 'Inter, inherit', textAlign: 'center' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+          <style>{`@keyframes ping { 0% { transform: scale(1); opacity: 0.7; } 80%, 100% { transform: scale(2); opacity: 0; } }`}</style>
+        </main>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 0 0', marginTop: '0.25rem' }}>
-              <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Status</span>
-              <span className="status-badge confirmed">
-                <ShieldCheck size={11} /> Confirmed
-              </span>
+        {/* Printable View (Clean, Clinical Black & White Receipt Template - Hospital Style) */}
+        <div className="hidden print:block" style={{
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          color: '#000',
+          backgroundColor: '#fff',
+          padding: '24px',
+          width: '100%',
+          maxWidth: '650px',
+          margin: '0 auto',
+          boxSizing: 'border-box'
+        }}>
+          {/* Header */}
+          <div style={{ textAlign: 'center', borderBottom: '2px solid #000', paddingBottom: '16px', marginBottom: '24px' }}>
+            <h1 style={{ fontSize: '20px', fontWeight: '800', margin: '0 0 4px 0', textTransform: 'uppercase', color: '#000', letterSpacing: '-0.3px' }}>
+              {clinic?.name || 'Sri Swetha Pharmacy & Clinic'}
+            </h1>
+            {clinic?.address && <p style={{ margin: '2px 0', fontSize: '12px', color: '#444' }}>📍 {clinic.address}</p>}
+            {clinic?.phone && <p style={{ margin: '2px 0', fontSize: '12px', color: '#444' }}>📞 Helpline: {clinic.phone}</p>}
+            <div style={{ marginTop: '12px', display: 'inline-block', border: '1px solid #000', padding: '4px 12px', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+              Official Appointment Slip & Receipt
             </div>
           </div>
 
-          {/* Footer */}
-          <div style={{ padding: '1.25rem 2rem 2.25rem', borderTop: '1px dashed rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-            <button
-              onClick={() => window.print()}
-              style={{ width: '100%', background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))', color: '#fff', border: 'none', padding: '13px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: '700', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 6px 20px rgba(99,102,241,0.3)', transition: 'all 0.2s', fontFamily: 'Inter, inherit' }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'none'}
-            >
-              🖨️ Print Appointment
-            </button>
-            <div style={{ display: 'flex', gap: '0.65rem' }}>
-              <button onClick={() => setSuccessApt(null)} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', color: 'var(--text)', padding: '11px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem', transition: 'all 0.2s', fontFamily: 'Inter, inherit' }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-              >
-                Book Another
-              </button>
-              <button onClick={() => router.push('/')} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', color: 'var(--text)', padding: '11px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem', transition: 'all 0.2s', fontFamily: 'Inter, inherit' }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-              >
-                Go Home
-              </button>
+          {/* Details Table */}
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '24px', fontSize: '13px' }}>
+            <tbody>
+              <tr style={{ borderBottom: '1px solid #ddd' }}>
+                <td style={{ padding: '8px 0', fontWeight: '600', color: '#555', width: '35%' }}>Appointment ID</td>
+                <td style={{ padding: '8px 0', fontWeight: '700', fontFamily: 'monospace', fontSize: '14px' }}>{refId}</td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #ddd' }}>
+                <td style={{ padding: '8px 0', fontWeight: '600', color: '#555' }}>Patient Name</td>
+                <td style={{ padding: '8px 0', fontWeight: '700' }}>{successApt.patient?.name}</td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #ddd' }}>
+                <td style={{ padding: '8px 0', fontWeight: '600', color: '#555' }}>Consulting Doctor</td>
+                <td style={{ padding: '8px 0', fontWeight: '700' }}>Dr. {successApt.doctor?.name || 'Doctor'}</td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #ddd' }}>
+                <td style={{ padding: '8px 0', fontWeight: '600', color: '#555' }}>Date & Time</td>
+                <td style={{ padding: '8px 0', fontWeight: '700' }}>
+                  {aptTime.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} at {aptTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                </td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #ddd' }}>
+                <td style={{ padding: '8px 0', fontWeight: '600', color: '#555' }}>Consultation Mode</td>
+                <td style={{ padding: '8px 0', fontWeight: '600' }}>
+                  {successApt.consultationType === 'in_person' ? '🏥 In-Clinic Consultation' : '💻 Teleconsultation (Online)'}
+                </td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #ddd' }}>
+                <td style={{ padding: '8px 0', fontWeight: '600', color: '#555' }}>Status</td>
+                <td style={{ padding: '8px 0', fontWeight: '700', color: '#1e7e34' }}>CONFIRMED (Paid ✅)</td>
+              </tr>
+            </tbody>
+          </table>
+
+          {/* Receipt Info */}
+          <div style={{ border: '1px solid #000', padding: '16px', marginBottom: '24px', backgroundColor: '#f9f9f9' }}>
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '13px', fontWeight: '800', textTransform: 'uppercase', borderBottom: '1px solid #000', paddingBottom: '4px' }}>
+              Payment Details
+            </h3>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '4px 0' }}>Consultation Fee</td>
+                  <td style={{ padding: '4px 0', textAlign: 'right' }}>₹{successApt.consultationFeeSnapshot || '0.00'}</td>
+                </tr>
+                <tr style={{ fontWeight: '800', borderTop: '1px solid #000' }}>
+                  <td style={{ padding: '8px 0 0 0' }}>Total Paid</td>
+                  <td style={{ padding: '8px 0 0 0', textAlign: 'right', fontSize: '15px' }}>₹{successApt.consultationFeeSnapshot || '0.00'}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Instructions */}
+          <div style={{ borderLeft: '3px solid #000', paddingLeft: '12px', fontSize: '11px', lineHeight: '1.4', color: '#333', marginBottom: '40px' }}>
+            <strong style={{ display: 'block', fontSize: '12px', margin: '0 0 4px 0', color: '#000' }}>📌 Patient Guidelines & Instructions:</strong>
+            <ul style={{ margin: 0, paddingLeft: '14px' }}>
+              <li>Please report at the reception desk / join the video room at least 10 minutes prior to your time slot.</li>
+              <li>Please carry this printout or show the SMS/email confirmation on your phone upon arrival.</li>
+              <li>Bring your old case files, current medications, and past diagnostic reports.</li>
+            </ul>
+          </div>
+
+          {/* Footer Sign stamp */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '48px' }}>
+            <div style={{ fontSize: '11px', color: '#666' }}>
+              <p style={{ margin: '0' }}>Printed on: {new Date().toLocaleString('en-IN')}</p>
+              <p style={{ margin: '0' }}>System-generated receipt. No signature required.</p>
+            </div>
+            <div style={{ textAlign: 'center', width: '180px' }}>
+              <div style={{ borderBottom: '1px solid #000', marginBottom: '6px' }} />
+              <span style={{ fontSize: '11px', fontWeight: '600', color: '#333' }}>Clinic Authority Stamp / Sign</span>
             </div>
           </div>
         </div>
-        <style>{`@keyframes ping { 0% { transform: scale(1); opacity: 0.7; } 80%, 100% { transform: scale(2); opacity: 0; } }`}</style>
-      </main>
+      </>
     );
   }
 

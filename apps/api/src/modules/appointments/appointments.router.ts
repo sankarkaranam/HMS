@@ -286,6 +286,7 @@ router.post('/clinics/:clinicId/book',
           id: patient.id,
           name: patient.name,
           phone: patient.phone,
+          email: patient.email,
         },
         // Teleconsult always needs online payment; in-person respects paymentGateway
         paymentRequired:

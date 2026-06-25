@@ -72,6 +72,9 @@ const emailWorker = new Worker<EmailJobData>(
 
     if (type === 'appointment_confirmation') {
       // 1. Send Email if consented
+      console.log(`✉️ Processing appointment confirmation email job for appointment ID: ${appointmentId}`);
+      console.log(`✉️ Patient Email: "${patient.email}", Consent: ${patient.emailConsent}`);
+      
       if (patient.email && patient.emailConsent) {
         const paymentDetails = (appointment as any).payment?.status === 'success' ? {
           amount: (appointment as any).payment.amount,
@@ -80,6 +83,7 @@ const emailWorker = new Worker<EmailJobData>(
           completedAt: (appointment as any).payment.completedAt,
         } : undefined;
 
+        console.log(`✉️ Dispatching SMTP request to: ${patient.email}`);
         await sendAppointmentConfirmationEmail({
           to: patient.email,
           patientName: patient.name,
@@ -91,6 +95,9 @@ const emailWorker = new Worker<EmailJobData>(
           appointmentId: appointment.id,
           paymentDetails,
         });
+        console.log(`✅ Appointment confirmation email sent successfully to: ${patient.email}`);
+      } else {
+        console.log(`⚠️ Skipping email delivery: ${!patient.email ? 'Patient email is empty' : 'Patient has disabled email consent'}`);
       }
 
       // 2. Send SMS if phone is present
