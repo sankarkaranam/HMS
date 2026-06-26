@@ -64,6 +64,7 @@ export default function BookingPage() {
   const [gender, setGender] = useState<'male' | 'female' | 'other' | ''>('');
   const [notes, setNotes] = useState('');
   const [consultationType, setConsultationType] = useState<'in_person' | 'teleconsult'>('in_person');
+  const [paymentMode, setPaymentMode] = useState<'online' | 'offline'>('online');
 
   const [loading, setLoading] = useState(true);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -202,6 +203,7 @@ export default function BookingPage() {
           consultationType,
           notes: notes || undefined,
           patient: { name, phone, email: email || undefined, age: age ? Number(age) : undefined, gender: gender || undefined },
+          paymentMode: consultationType === 'teleconsult' ? 'online' : paymentMode,
         }),
       });
       const data = await res.json();
@@ -356,6 +358,7 @@ export default function BookingPage() {
                 { label: 'Time', value: aptTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) },
                 { label: 'Type', value: successApt.consultationType === 'in_person' ? '🏥 In Clinic' : '💻 Teleconsult' },
                 { label: 'Ref ID', value: refId, mono: true },
+                ...(clinic?.phone ? [{ label: 'Helpline', value: clinic.phone }] : []),
               ].map(({ label, value, mono }) => (
                 <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                   <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{label}</span>
@@ -781,12 +784,65 @@ export default function BookingPage() {
                     );
                   })}
                 </div>
+                {/* Payment Option Selector (Only for in_person when clinic has payment gateway and fee > 0) */}
+                {consultationType === 'in_person' && clinic?.paymentGateway !== 'free' && Number(selectedDoctor?.consultationFee) > 0 && (
+                  <div className="animate-in" style={{ marginTop: '0.85rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.45rem', fontWeight: '600' }}>Payment Option</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
+                      {[
+                        { value: 'online', label: '💳 Pay Online Now', sub: 'UPI, Cards' },
+                        { value: 'offline', label: '🏥 Pay at Hospital', sub: 'Cash / UPI Counter' },
+                      ].map((opt) => {
+                        const isActive = paymentMode === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setPaymentMode(opt.value as any)}
+                            style={{
+                              padding: '0.65rem 0.5rem',
+                              borderRadius: 'var(--radius-sm)',
+                              background: isActive ? 'rgba(99,102,241,0.1)' : 'rgba(30,41,59,0.4)',
+                              border: isActive ? '2px solid var(--primary)' : '1px solid rgba(255,255,255,0.07)',
+                              color: isActive ? 'var(--primary-light)' : 'var(--text-muted)',
+                              fontWeight: '700',
+                              fontSize: '0.8rem',
+                              cursor: 'pointer',
+                              transition: 'all 0.18s',
+                              fontFamily: 'Inter, inherit',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              gap: '2px'
+                            }}
+                          >
+                            {opt.label}
+                            <span style={{ fontSize: '0.62rem', fontWeight: '500', color: 'var(--text-subtle)' }}>
+                              {opt.sub}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Teleconsult info banner */}
                 {consultationType === 'teleconsult' && Number(selectedDoctor?.consultationFee) > 0 && (
                   <div className="animate-in" style={{ marginTop: '0.6rem', display: 'flex', alignItems: 'flex-start', gap: '8px', background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: 'var(--radius-xs)', padding: '0.65rem 0.85rem' }}>
                     <span style={{ fontSize: '0.95rem', flexShrink: 0 }}>⚡</span>
                     <p style={{ fontSize: '0.76rem', color: '#fbbf24', lineHeight: '1.45', margin: 0 }}>
-                      <strong>Online payment required</strong> for teleconsult. You'll be redirected to PhonePe to complete payment.
+                      <strong>Online payment required</strong> for teleconsult. You'll be redirected to PhonePe/Razorpay to complete payment.
+                    </p>
+                  </div>
+                )}
+
+                {/* Pay at Hospital info banner */}
+                {consultationType === 'in_person' && paymentMode === 'offline' && clinic?.paymentGateway !== 'free' && Number(selectedDoctor?.consultationFee) > 0 && (
+                  <div className="animate-in" style={{ marginTop: '0.6rem', display: 'flex', alignItems: 'flex-start', gap: '8px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.18)', borderRadius: 'var(--radius-xs)', padding: '0.65rem 0.85rem' }}>
+                    <span style={{ fontSize: '0.95rem', flexShrink: 0 }}>🏥</span>
+                    <p style={{ fontSize: '0.76rem', color: 'var(--success)', lineHeight: '1.45', margin: 0 }}>
+                      <strong>Pay at Counter</strong> selected. You can pay cash or UPI at the hospital reception.
                     </p>
                   </div>
                 )}
@@ -823,14 +879,30 @@ export default function BookingPage() {
                           ? 'FREE'
                           : `₹${selectedDoctor.consultationFee}`}
                       </span>
-                      {isTeleconsultPaid && (
-                        <span style={{ display: 'block', fontSize: '0.66rem', color: '#f59e0b', fontWeight: '600', marginTop: '1px' }}>⚡ Online via PhonePe</span>
-                      )}
-                      {!isTeleconsultPaid && clinic?.paymentGateway === 'free' && Number(selectedDoctor.consultationFee) > 0 && (
-                        <span style={{ display: 'block', fontSize: '0.66rem', color: 'var(--text-subtle)', marginTop: '1px' }}>Pay at clinic</span>
-                      )}
+                      {isTeleconsultPaid || (consultationType === 'in_person' && paymentMode === 'online' && clinic?.paymentGateway !== 'free' && Number(selectedDoctor.consultationFee) > 0) ? (
+                        <span style={{ display: 'block', fontSize: '0.66rem', color: '#f59e0b', fontWeight: '600', marginTop: '1px' }}>⚡ Online via {clinic?.paymentGateway}</span>
+                      ) : null}
+                      {((!isTeleconsultPaid && clinic?.paymentGateway === 'free') || (consultationType === 'in_person' && paymentMode === 'offline')) && Number(selectedDoctor.consultationFee) > 0 ? (
+                        <span style={{ display: 'block', fontSize: '0.66rem', color: 'var(--text-subtle)', marginTop: '1px' }}>Pay at clinic / hospital</span>
+                      ) : null}
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Helpline Contact Card */}
+              {clinic?.phone && (
+                <div className="animate-in" style={{ background: 'rgba(99,102,241,0.04)', border: '1px dashed rgba(99,102,241,0.18)', borderRadius: 'var(--radius-sm)', padding: '0.9rem 1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(99,102,241,0.1)', color: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <PhoneCall size={14} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '500' }}>Clinic Helpline</div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: '700', color: '#fff' }}>{clinic.phone}</div>
+                    </div>
+                  </div>
+                  <a href={`tel:${clinic.phone}`} style={{ fontSize: '0.72rem', color: 'var(--primary-light)', fontWeight: '700', textDecoration: 'none', border: '1px solid rgba(99,102,241,0.3)', borderRadius: '4px', padding: '4px 8px', background: 'rgba(99,102,241,0.06)' }}>Call Now</a>
                 </div>
               )}
 

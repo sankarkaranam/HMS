@@ -12,6 +12,7 @@ import { emailQueue } from '../../queues';
 import { auditLog } from '../../lib/audit';
 import { addMinutes } from 'date-fns';
 import { appointmentReminders } from '../../db/schema';
+import { authMiddleware, requireRole, AuthenticatedRequest } from '../../middleware/auth';
 
 const router: Router = Router();
 
@@ -288,7 +289,22 @@ router.post('/create-order', validate(createOrderSchema),
           gateway: 'phonepe',
           gatewayOrderId: merchantOrderId,
           status: 'pending',
-        }).onConflictDoNothing();
+        }).onConflictDoUpdate({
+          target: payments.appointmentId,
+          set: {
+            patientId: apt.patientId,
+            amount: apt.consultationFeeSnapshot,
+            gateway: 'phonepe',
+            gatewayOrderId: merchantOrderId,
+            status: 'pending',
+            gatewayPaymentId: null,
+            gatewaySignature: null,
+            paymentMethod: null,
+            metadata: null,
+            completedAt: null,
+            createdAt: new Date(),
+          }
+        });
 
         return res.json({
           gateway: 'phonepe',
@@ -323,7 +339,22 @@ router.post('/create-order', validate(createOrderSchema),
         gateway: 'razorpay',
         gatewayOrderId: order.id,
         status: 'pending',
-      }).onConflictDoNothing();
+      }).onConflictDoUpdate({
+        target: payments.appointmentId,
+        set: {
+          patientId: apt.patientId,
+          amount: apt.consultationFeeSnapshot,
+          gateway: 'razorpay',
+          gatewayOrderId: order.id,
+          status: 'pending',
+          gatewayPaymentId: null,
+          gatewaySignature: null,
+          paymentMethod: null,
+          metadata: null,
+          completedAt: null,
+          createdAt: new Date(),
+        }
+      });
 
       return res.json({
         gateway: 'razorpay',
@@ -674,5 +705,52 @@ router.post('/razorpay', async (req: Request, res: Response, next: NextFunction)
     return res.json({ received: true });
   } catch (err) { next(err); }
 });
+
+// ─── POST /payments/:appointmentId/mark-paid-offline — Mark offline payment as success ───
+
+router.post('/:appointmentId/mark-paid-offline', authMiddleware,
+  requireRole('owner', 'admin', 'receptionist'),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const appointmentId = req.params.appointmentId as string;
+
+      const apt = await db.query.appointments.findFirst({
+        where: eq(appointments.id, appointmentId),
+      });
+      if (!apt) throw new AppError('Appointment not found', 404);
+
+      await db.transaction(async (tx) => {
+        // Upsert payment as success
+        await tx.insert(payments).values({
+          clinicId: apt.clinicId,
+          appointmentId: apt.id,
+          patientId: apt.patientId,
+          amount: apt.consultationFeeSnapshot,
+          currency: 'INR',
+          gateway: 'free',
+          status: 'success',
+          paymentMethod: 'cash',
+          completedAt: new Date(),
+        }).onConflictDoUpdate({
+          target: payments.appointmentId,
+          set: {
+            status: 'success',
+            paymentMethod: 'cash',
+            completedAt: new Date(),
+            gateway: 'free',
+            amount: apt.consultationFeeSnapshot,
+          }
+        });
+
+        // Ensure appointment is confirmed
+        await tx.update(appointments)
+          .set({ status: 'confirmed', updatedAt: new Date() })
+          .where(eq(appointments.id, appointmentId));
+      });
+
+      return res.json({ message: 'Offline payment recorded successfully' });
+    } catch (err) { next(err); }
+  }
+);
 
 export default router;

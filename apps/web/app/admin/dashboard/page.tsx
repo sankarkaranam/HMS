@@ -91,6 +91,8 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [appointmentsList, setAppointmentsList] = useState<Appointment[]>([]);
   const [doctorsList, setDoctorsList] = useState<Doctor[]>([]);
+  const [editingAptFeeId, setEditingAptFeeId] = useState<string | null>(null);
+  const [newAptFee, setNewAptFee] = useState<string>('');
 
   // Loading & Error states
   const [loading, setLoading] = useState(true);
@@ -146,6 +148,7 @@ export default function AdminDashboardPage() {
   const [filterDate, setFilterDate] = useState('');
   const [filterDoctor, setFilterDoctor] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [filterPaymentMode, setFilterPaymentMode] = useState<'all' | 'online' | 'offline'>('all');
 
   // Check Auth on Mount
   useEffect(() => {
@@ -243,6 +246,49 @@ export default function AdminDashboardPage() {
       if (!res.ok) throw new Error(data.error || 'Failed to complete appointment');
       
       setSuccessMsg('Appointment marked as completed!');
+      loadDashboardData();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  // Mark Paid Offline Action
+  const handleMarkPaidOffline = async (id: string) => {
+    try {
+      setError(null);
+      const res = await fetch(`${API_URL}/payments/${id}/mark-paid-offline`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to record offline payment');
+      
+      setSuccessMsg('Offline payment marked as successful!');
+      loadDashboardData();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  // Update Consultation Fee Action
+  const handleUpdateFee = async (id: string, consultationFee: number) => {
+    try {
+      setError(null);
+      const res = await fetch(`${API_URL}/appointments/${id}/update-fee`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ consultationFee }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update consultation fee');
+      
+      setSuccessMsg('Consultation fee updated successfully!');
       loadDashboardData();
     } catch (err: any) {
       setError(err.message);
@@ -525,6 +571,12 @@ export default function AdminDashboardPage() {
       if (filterDate && apt.appointmentDatetime.split('T')[0] !== filterDate) return false;
       if (filterDoctor && apt.doctor.id !== filterDoctor) return false;
       if (filterStatus && apt.status !== filterStatus) return false;
+      if (filterPaymentMode === 'online') {
+        if (!apt.payment || apt.payment.gateway === 'free') return false;
+      }
+      if (filterPaymentMode === 'offline') {
+        if (apt.payment && apt.payment.gateway !== 'free') return false;
+      }
       return true;
     });
   };
@@ -745,10 +797,23 @@ export default function AdminDashboardPage() {
                 </select>
               </div>
 
-              {(filterDate || filterDoctor || filterStatus) && (
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Payment Option</label>
+                <select 
+                  value={filterPaymentMode}
+                  onChange={(e) => setFilterPaymentMode(e.target.value as any)}
+                  style={{ padding: '0.5rem 0.75rem', borderRadius: '6px', background: 'var(--surface-2)', border: '1px solid var(--border)', color: '#fff', outline: 'none', minWidth: '175px', height: '37px' }}
+                >
+                  <option value="all">All Payments</option>
+                  <option value="online">Online Payment (UPI/Card)</option>
+                  <option value="offline">Offline / Pay at Hospital</option>
+                </select>
+              </div>
+
+              {(filterDate || filterDoctor || filterStatus || filterPaymentMode !== 'all') && (
                 <button 
-                  onClick={() => { setFilterDate(''); setFilterDoctor(''); setFilterStatus(''); }}
-                  style={{ background: 'none', border: 'none', color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.85rem', marginTop: '1rem' }}
+                  onClick={() => { setFilterDate(''); setFilterDoctor(''); setFilterStatus(''); setFilterPaymentMode('all'); }}
+                  style={{ background: 'none', border: 'none', color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.85rem' }}
                 >
                   Clear Filters
                 </button>
@@ -811,33 +876,92 @@ export default function AdminDashboardPage() {
                           </span>
                         </td>
                         <td style={{ padding: '1rem 1.5rem', fontSize: '0.85rem' }}>
-                          {apt.payment ? (
-                            <div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            {/* Consultation Fee editing */}
+                            {editingAptFeeId === apt.id ? (
                               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <span style={{ textTransform: 'capitalize', fontWeight: '600' }}>{apt.payment.gateway}</span>
-                                <span style={{
-                                  padding: '2px 6px',
-                                  borderRadius: '3px',
-                                  fontSize: '0.7rem',
-                                  fontWeight: '700',
-                                  background: apt.payment.status === 'success' ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
-                                  color: apt.payment.status === 'success' ? 'var(--success)' : 'var(--warning)'
-                                }}>
-                                  {apt.payment.status.toUpperCase()}
-                                </span>
+                                <span style={{ color: 'var(--text-muted)' }}>₹</span>
+                                <input
+                                  type="number"
+                                  value={newAptFee}
+                                  onChange={(e) => setNewAptFee(e.target.value)}
+                                  style={{ width: '65px', padding: '2px 4px', background: 'var(--surface-2)', border: '1px solid var(--border)', color: '#fff', borderRadius: '4px', outline: 'none' }}
+                                />
+                                <button
+                                  onClick={async () => {
+                                    await handleUpdateFee(apt.id, Number(newAptFee));
+                                    setEditingAptFeeId(null);
+                                  }}
+                                  style={{ background: 'var(--success)', border: 'none', color: '#fff', padding: '3px 6px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.7rem', fontWeight: '600' }}
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => setEditingAptFeeId(null)}
+                                  style={{ background: 'var(--danger)', border: 'none', color: '#fff', padding: '3px 6px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.7rem', fontWeight: '600' }}
+                                >
+                                  X
+                                </button>
                               </div>
-                              {apt.payment.gatewayPaymentId && (
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'monospace', marginTop: '2px' }}>
-                                  ID: {apt.payment.gatewayPaymentId}
+                            ) : (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontWeight: '800', color: 'var(--accent)', fontSize: '0.95rem' }}>
+                                  ₹{apt.consultationFeeSnapshot}
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    setEditingAptFeeId(apt.id);
+                                    setNewAptFee(String(apt.consultationFeeSnapshot));
+                                  }}
+                                  style={{ background: 'none', border: 'none', color: 'var(--primary-light)', cursor: 'pointer', fontSize: '0.75rem', padding: 0 }}
+                                  title="Edit Fee"
+                                >
+                                  ✏️
+                                </button>
+                              </div>
+                            )}
+
+                            {/* Payment details */}
+                            {apt.payment ? (
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <span style={{ textTransform: 'capitalize', fontWeight: '600', color: 'var(--text-muted)' }}>
+                                    {apt.payment.gateway === 'free' ? 'Hospital' : apt.payment.gateway}
+                                  </span>
+                                  <span style={{
+                                    padding: '2px 6px',
+                                    borderRadius: '3px',
+                                    fontSize: '0.65rem',
+                                    fontWeight: '700',
+                                    background: apt.payment.status === 'success' ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
+                                    color: apt.payment.status === 'success' ? 'var(--success)' : 'var(--warning)'
+                                  }}>
+                                    {apt.payment.status.toUpperCase()}
+                                  </span>
                                 </div>
-                              )}
-                            </div>
-                          ) : (
-                            <span style={{ color: 'var(--text-muted)' }}>—</span>
-                          )}
+                                {apt.payment.gatewayPaymentId && (
+                                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'monospace', marginTop: '2px' }}>
+                                    ID: {apt.payment.gatewayPaymentId}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span style={{ color: 'var(--text-subtle)', fontSize: '0.75rem' }}>Pay at Hospital</span>
+                            )}
+                          </div>
                         </td>
                         <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
-                          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
+                            {/* Offline payment collection */}
+                            {apt.payment && apt.payment.gateway === 'free' && apt.payment.status === 'pending' && (
+                              <button 
+                                onClick={() => handleMarkPaidOffline(apt.id)}
+                                style={{ background: 'var(--primary)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '700' }}
+                              >
+                                Mark Paid
+                              </button>
+                            )}
+
                             {apt.status === 'confirmed' && (
                               <>
                                 <button 

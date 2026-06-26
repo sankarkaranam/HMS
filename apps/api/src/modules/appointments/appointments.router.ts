@@ -24,6 +24,7 @@ const bookAppointmentSchema = z.object({
   appointmentDatetime: z.string().datetime(),
   consultationType: z.enum(['in_person', 'teleconsult']).default('in_person'),
   notes: z.string().max(1000).optional(),
+  paymentMode: z.enum(['online', 'offline']).default('online').optional(),
   // Patient details (upsert by phone within clinic group)
   patient: z.object({
     name: z.string().min(2).max(255),
@@ -104,7 +105,7 @@ router.post('/clinics/:clinicId/book',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const clinicId = req.params.clinicId as string;
-      const { doctorId, appointmentDatetime, consultationType, notes, patient: patientData } = req.body;
+      const { doctorId, appointmentDatetime, consultationType, notes, patient: patientData, paymentMode = 'online' } = req.body;
 
       // 1. Validate clinic + doctor exist
       const clinic = await db.query.clinics.findFirst({
@@ -208,9 +209,11 @@ router.post('/clinics/:clinicId/book',
 
       const targetStatus = (Number(doctor.consultationFee) === 0)
         ? 'confirmed'
-        : (consultationType === 'teleconsult')
-          ? 'pending_payment'
-          : (clinic.paymentGateway === 'free' ? 'confirmed' : 'pending_payment');
+        : (paymentMode === 'offline')
+          ? 'confirmed'
+          : (consultationType === 'teleconsult')
+            ? 'pending_payment'
+            : (clinic.paymentGateway === 'free' ? 'confirmed' : 'pending_payment');
 
       // 4. Create or reuse appointment
       let appointment;
@@ -250,10 +253,37 @@ router.post('/clinics/:clinicId/book',
         .set({ lastAppointmentAt: slotDatetime, updatedAt: new Date() })
         .where(eq(patients.id, patient.id));
 
-      // 6. Confirm immediately for: free consultations OR (free gateway + in_person)
+      if (paymentMode === 'offline' && Number(doctor.consultationFee) > 0) {
+        await db.insert(payments).values({
+          clinicId,
+          appointmentId: appointment.id,
+          patientId: patient.id,
+          amount: doctor.consultationFee,
+          currency: 'INR',
+          gateway: 'free',
+          status: 'pending',
+        }).onConflictDoUpdate({
+          target: payments.appointmentId,
+          set: {
+            patientId: patient.id,
+            amount: doctor.consultationFee,
+            gateway: 'free',
+            status: 'pending',
+            gatewayPaymentId: null,
+            gatewaySignature: null,
+            paymentMethod: null,
+            metadata: null,
+            completedAt: null,
+            createdAt: new Date(),
+          }
+        });
+      }
+
+      // 6. Confirm immediately for: free consultations OR pay-at-clinic OR (free gateway + in_person)
       //    Teleconsult always waits for online payment regardless of gateway.
       const isImmediatelyConfirmed =
         Number(doctor.consultationFee) === 0 ||
+        paymentMode === 'offline' ||
         (clinic.paymentGateway === 'free' && consultationType !== 'teleconsult');
 
       if (isImmediatelyConfirmed) {
@@ -290,6 +320,7 @@ router.post('/clinics/:clinicId/book',
         },
         // Teleconsult always needs online payment; in-person respects paymentGateway
         paymentRequired:
+          paymentMode !== 'offline' &&
           Number(doctor.consultationFee) > 0 &&
           (consultationType === 'teleconsult' || clinic.paymentGateway !== 'free'),
         consultationFee: doctor.consultationFee,
@@ -410,6 +441,47 @@ router.get('/clinics/:clinicId/patients', authMiddleware,
       });
 
       return res.json({ data: patientList, page, limit });
+    } catch (err) { next(err); }
+  }
+);
+
+// ─── PUT /appointments/:appointmentId/update-fee — Update consultation fee ───
+
+const updateFeeSchema = z.object({
+  consultationFee: z.coerce.number().min(0),
+});
+
+router.put('/appointments/:appointmentId/update-fee', authMiddleware,
+  requireRole('owner', 'admin', 'receptionist'),
+  validate(updateFeeSchema),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const appointmentId = req.params.appointmentId as string;
+      const { consultationFee } = req.body;
+
+      const apt = await db.query.appointments.findFirst({
+        where: eq(appointments.id, appointmentId),
+      });
+      if (!apt) throw new AppError('Appointment not found', 404);
+
+      await db.transaction(async (tx) => {
+        // 1. Update fee snapshot in appointment
+        await tx.update(appointments)
+          .set({
+            consultationFeeSnapshot: String(consultationFee),
+            updatedAt: new Date(),
+          })
+          .where(eq(appointments.id, appointmentId));
+
+        // 2. If a payment record exists, update its amount as well
+        await tx.update(payments)
+          .set({
+            amount: String(consultationFee),
+          })
+          .where(eq(payments.appointmentId, appointmentId));
+      });
+
+      return res.json({ message: 'Fee updated successfully', consultationFee });
     } catch (err) { next(err); }
   }
 );
