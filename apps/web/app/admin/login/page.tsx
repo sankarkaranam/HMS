@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ShieldCheck, AlertCircle, CheckCircle } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
@@ -134,7 +135,9 @@ export default function AdminLoginPage() {
 
       <div className="glass animate-in" style={{ padding: '3rem 2.5rem', maxWidth: '440px', width: '100%', zIndex: 1, boxShadow: 'var(--shadow)' }}>
         <header style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🔐</div>
+          <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(21,101,192,0.08)', border: '1.5px solid rgba(21,101,192,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+            <ShieldCheck size={26} color="var(--primary)" strokeWidth={1.75} />
+          </div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: '800', marginBottom: '0.25rem' }}>Admin Portal</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Sign in to manage appointments and staff.</p>
         </header>
@@ -189,14 +192,16 @@ export default function AdminLoginPage() {
         </div>
 
         {error && (
-          <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
-            ⚠️ {error}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--danger-bg)', border: '1px solid rgba(198,40,40,0.2)', color: 'var(--danger)', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+            <AlertCircle size={15} strokeWidth={2} />
+            {error}
           </div>
         )}
 
         {message && (
-          <div style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)', color: 'var(--success)', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
-            ✓ {message}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--success-bg)', border: '1px solid rgba(46,125,50,0.2)', color: 'var(--success)', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+            <CheckCircle size={15} strokeWidth={2} />
+            {message}
           </div>
         )}
 

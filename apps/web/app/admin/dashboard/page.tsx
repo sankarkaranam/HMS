@@ -2,6 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  LayoutDashboard, CalendarDays, Stethoscope, Settings, Phone,
+  AlertCircle, CheckCircle, CreditCard, Wallet, LogOut
+} from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
@@ -597,36 +601,42 @@ export default function AdminDashboardPage() {
       <aside style={{ width: '260px', background: 'var(--surface-2)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem' }}>
         <div style={{ marginBottom: '3rem' }}>
           <h2 className="gradient-text" style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '0.25rem' }}>{clinic?.name}</h2>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>⚙️ Dashboard Portal</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+            <Settings size={13} strokeWidth={2} /> Dashboard Portal
+          </div>
         </div>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
           {[
-            { id: 'overview', label: '📊 Overview' },
-            { id: 'appointments', label: '📅 Appointments' },
-            { id: 'doctors', label: '🥼 Doctors' },
-            { id: 'settings', label: '⚙️ Settings' },
-          ].map((tab) => (
+            { id: 'overview', Icon: LayoutDashboard, label: 'Overview' },
+            { id: 'appointments', Icon: CalendarDays, label: 'Appointments' },
+            { id: 'doctors', Icon: Stethoscope, label: 'Doctors' },
+            { id: 'settings', Icon: Settings, label: 'Settings' },
+          ].map(({ id, Icon, label }) => (
             <button
-              key={tab.id}
+              key={id}
               onClick={() => {
-                setActiveTab(tab.id as any);
+                setActiveTab(id as any);
                 setSuccessMsg(null);
               }}
               style={{
                 textAlign: 'left',
                 padding: '0.85rem 1.25rem',
                 borderRadius: 'var(--radius-sm)',
-                background: activeTab === tab.id ? 'var(--primary)' : 'transparent',
+                background: activeTab === id ? 'var(--primary)' : 'transparent',
                 border: 'none',
-                color: activeTab === tab.id ? '#fff' : 'var(--text-muted)',
+                color: activeTab === id ? '#fff' : 'var(--text-muted)',
                 cursor: 'pointer',
                 fontWeight: '600',
                 fontSize: '0.95rem',
                 transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
               }}
             >
-              {tab.label}
+              <Icon size={16} strokeWidth={1.75} />
+              {label}
             </button>
           ))}
         </nav>
@@ -650,14 +660,18 @@ export default function AdminDashboardPage() {
       <main style={{ flex: 1, padding: '3rem', overflowY: 'auto', maxHeight: '100vh' }}>
         {successMsg && (
           <div style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: 'var(--success)', padding: '1rem', borderRadius: '8px', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.95rem', fontWeight: '500' }}>✓ {successMsg}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.95rem', fontWeight: '500' }}>
+              <CheckCircle size={16} strokeWidth={2} /> {successMsg}
+            </span>
             <button onClick={() => setSuccessMsg(null)} style={{ background: 'none', border: 'none', color: 'var(--success)', cursor: 'pointer', fontWeight: 'bold' }}>×</button>
           </div>
         )}
 
         {error && (
           <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', padding: '1rem', borderRadius: '8px', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.95rem', fontWeight: '500' }}>⚠️ {error}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.95rem', fontWeight: '500' }}>
+              <AlertCircle size={16} strokeWidth={2} /> {error}
+            </span>
             <button onClick={() => setError(null)} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontWeight: 'bold' }}>×</button>
           </div>
         )}
@@ -846,7 +860,10 @@ export default function AdminDashboardPage() {
                       <tr key={apt.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }}>
                         <td style={{ padding: '1rem 1.5rem' }}>
                           <div style={{ fontWeight: '600' }}>{apt.patient.name}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>📞 {apt.patient.phone}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+            <Phone size={12} strokeWidth={2} />
+            {apt.patient.phone}
+          </div>
                         </td>
                         <td style={{ padding: '1rem 1.5rem', fontSize: '0.95rem' }}>{apt.doctor.name}</td>
                         <td style={{ padding: '1rem 1.5rem' }}>
@@ -1350,7 +1367,9 @@ export default function AdminDashboardPage() {
                 
                 {/* General Clinic Information */}
                 <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: '700', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>📋 Clinic Profile</h3>
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '1.1rem', fontWeight: '700', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem', marginBottom: '1.25rem', color: 'var(--text)' }}>
+                    <Settings size={18} strokeWidth={1.75} color="var(--primary)" /> Clinic Profile
+                  </h3>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: '500' }}>Clinic Name *</label>
@@ -1399,7 +1418,9 @@ export default function AdminDashboardPage() {
 
                 {/* Pluggable Payment Gateway configuration */}
                 <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: '700', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>💳 Integrated Payment Gateway</h3>
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '1.1rem', fontWeight: '700', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem', marginBottom: '1.25rem', color: 'var(--text)' }}>
+                    <CreditCard size={18} strokeWidth={1.75} color="var(--primary)" /> Integrated Payment Gateway
+                  </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: '500' }}>Active Gateway</label>
@@ -1416,8 +1437,11 @@ export default function AdminDashboardPage() {
                     {settingsGateway === 'razorpay' && (
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: 'rgba(255,255,255,0.01)', padding: '1.5rem', borderRadius: '8px', border: '1px dashed var(--border)' }}>
                         <div style={{ gridColumn: 'span 2' }}>
-                          <span style={{ fontSize: '0.85rem', color: 'var(--accent)', fontWeight: '600' }}>
-                            {clinic?.hasPaymentGateway && clinic.paymentGateway === 'razorpay' ? '✓ Keys are configured securely at rest' : '⚠️ No keys set yet. Fill in keys below to configure.'}
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.85rem', fontWeight: '600' }}>
+                            {clinic?.hasPaymentGateway && clinic.paymentGateway === 'razorpay'
+                              ? <><CheckCircle size={14} strokeWidth={2} color="var(--success)" /> Keys are configured securely at rest</>
+                              : <><AlertCircle size={14} strokeWidth={2} color="var(--warning)" /> No keys set yet. Fill in keys below to configure.</>
+                            }
                           </span>
                         </div>
                         <div>
@@ -1440,8 +1464,11 @@ export default function AdminDashboardPage() {
                     {settingsGateway === 'phonepe' && (
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: 'rgba(255,255,255,0.01)', padding: '1.5rem', borderRadius: '8px', border: '1px dashed var(--border)' }}>
                         <div style={{ gridColumn: 'span 2' }}>
-                          <span style={{ fontSize: '0.85rem', color: 'var(--accent)', fontWeight: '600' }}>
-                            {clinic?.hasPaymentGateway && clinic.paymentGateway === 'phonepe' ? '✓ PhonePe credentials are configured securely' : '⚠️ No credentials set yet. Fill in details below to configure.'}
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.85rem', fontWeight: '600' }}>
+                            {clinic?.hasPaymentGateway && clinic.paymentGateway === 'phonepe'
+                              ? <><CheckCircle size={14} strokeWidth={2} color="var(--success)" /> PhonePe credentials are configured securely</>
+                              : <><AlertCircle size={14} strokeWidth={2} color="var(--warning)" /> No credentials set yet. Fill in details below to configure.</>
+                            }
                           </span>
                         </div>
                         <div>

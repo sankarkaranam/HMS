@@ -3,6 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import {
+  Hospital, User, CheckCircle, AlertCircle, Link2,
+  ListChecks, Settings, ArrowLeft, Eye, EyeOff, Loader2, Plus
+} from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
@@ -85,22 +89,20 @@ export default function RegisterClinicPage() {
   if (success) {
     return (
       <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', background: 'var(--surface)', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(21,101,192,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
         <div className="glass animate-in" style={{ padding: '3rem 2.5rem', maxWidth: '520px', width: '100%', zIndex: 1, textAlign: 'center' }}>
-          <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'rgba(16,185,129,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', border: '2px solid rgba(16,185,129,0.3)' }}>
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" className="check-draw" />
-            </svg>
+          <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'var(--success-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', border: '2px solid rgba(46,125,50,0.25)' }}>
+            <CheckCircle size={34} color="var(--success)" strokeWidth={1.75} className="check-draw" />
           </div>
 
-          <h1 style={{ fontSize: '1.75rem', fontWeight: '800', marginBottom: '0.5rem' }}>Clinic Registered! 🎉</h1>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--text)' }}>Clinic Registered!</h1>
           <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: '1.6' }}>
             Your clinic has been created successfully. Here&apos;s your booking URL:
           </p>
 
           {/* Booking URL display */}
-          <div style={{ background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', padding: '1rem 1.25rem', marginBottom: '1.5rem', border: '1px solid var(--border)', wordBreak: 'break-all' }}>
+          <div style={{ background: 'var(--surface-3)', borderRadius: 'var(--radius-sm)', padding: '1rem 1.25rem', marginBottom: '1.5rem', border: '1px solid var(--border)', wordBreak: 'break-all' }}>
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem', fontWeight: '600' }}>Patient Booking URL</div>
             <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--primary-light)' }}>
               {currentDomain}/book/{success.slug}
@@ -108,8 +110,11 @@ export default function RegisterClinicPage() {
           </div>
 
           {/* Next steps */}
-          <div style={{ background: 'rgba(99,102,241,0.08)', borderRadius: 'var(--radius-sm)', padding: '1.25rem', marginBottom: '2rem', textAlign: 'left', border: '1px solid rgba(99,102,241,0.15)' }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.75rem', color: 'var(--primary-light)' }}>📋 Next Steps</div>
+          <div style={{ background: 'rgba(21,101,192,0.06)', borderRadius: 'var(--radius-sm)', padding: '1.25rem', marginBottom: '2rem', textAlign: 'left', border: '1px solid rgba(21,101,192,0.14)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.75rem', color: 'var(--primary)' }}>
+              <ListChecks size={15} strokeWidth={2} />
+              Next Steps
+            </div>
             <ol style={{ paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
               <li>Login to the admin dashboard</li>
               <li>Add your doctors and set their availability</li>
@@ -121,20 +126,23 @@ export default function RegisterClinicPage() {
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
             <Link href="/admin/login" style={{
               display: 'inline-flex', alignItems: 'center', gap: '8px',
-              background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+              background: 'var(--primary)',
               color: '#fff', padding: '12px 28px', borderRadius: '100px',
               fontWeight: '600', fontSize: '0.95rem', textDecoration: 'none',
-              boxShadow: '0 8px 24px rgba(99,102,241,0.3)',
+              boxShadow: '0 6px 20px rgba(21,101,192,0.25)',
             }}>
-              ⚙️ Go to Admin Login
+              <Settings size={16} strokeWidth={2} />
+              Go to Admin Login
             </Link>
             <Link href="/" style={{
               display: 'inline-flex', alignItems: 'center', gap: '8px',
-              background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border)',
-              color: 'var(--text)', padding: '12px 28px', borderRadius: '100px',
+              background: '#FFFFFF', border: '1.5px solid rgba(21,101,192,0.2)',
+              color: 'var(--primary)', padding: '12px 28px', borderRadius: '100px',
               fontWeight: '600', fontSize: '0.95rem', textDecoration: 'none',
+              boxShadow: 'var(--shadow-sm)',
             }}>
-              ← Back to Home
+              <ArrowLeft size={16} strokeWidth={2} />
+              Back to Home
             </Link>
           </div>
         </div>
@@ -145,16 +153,17 @@ export default function RegisterClinicPage() {
   return (
     <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', background: 'var(--surface)', position: 'relative', overflow: 'hidden' }}>
       {/* Background orbs */}
-      <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: '-10%', right: '-10%', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(6,182,212,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(21,101,192,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '-10%', right: '-10%', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,151,167,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
       <div className="animate-in" style={{ maxWidth: '560px', width: '100%', zIndex: 1 }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <Link href="/" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '4px', marginBottom: '1.5rem' }}>
-            ← Back to Home
+            <ArrowLeft size={14} />
+            Back to Home
           </Link>
-          <h1 style={{ fontSize: '2rem', fontWeight: '800', marginBottom: '0.5rem' }}>
+          <h1 style={{ fontSize: '2rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--text)' }}>
             Register Your <span className="gradient-text">Clinic</span>
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
@@ -164,8 +173,9 @@ export default function RegisterClinicPage() {
 
         {/* Error */}
         {error && (
-          <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
-            ⚠️ {error}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--danger-bg)', border: '1px solid rgba(198,40,40,0.2)', color: 'var(--danger)', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+            <AlertCircle size={15} strokeWidth={2} />
+            {error}
           </div>
         )}
 
@@ -173,8 +183,10 @@ export default function RegisterClinicPage() {
           {/* Clinic Details Section */}
           <div className="glass" style={{ padding: '2rem', marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.5rem' }}>
-              <span style={{ fontSize: '1.25rem' }}>🏥</span>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: '700' }}>Clinic Details</h2>
+              <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: 'rgba(21,101,192,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Hospital size={17} color="var(--primary)" strokeWidth={1.75} />
+              </div>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text)' }}>Clinic Details</h2>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -212,8 +224,9 @@ export default function RegisterClinicPage() {
                   title="Only lowercase letters, numbers, and hyphens"
                 />
                 {slug && (
-                  <div style={{ fontSize: '0.75rem', color: 'var(--primary-light)', marginTop: '0.4rem', wordBreak: 'break-all' }}>
-                    🔗 Patients will book at: <strong>{currentDomain}/book/{slug}</strong>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.75rem', color: 'var(--primary)', marginTop: '0.4rem', wordBreak: 'break-all' }}>
+                    <Link2 size={12} strokeWidth={2} />
+                    Patients will book at: <strong>{currentDomain}/book/{slug}</strong>
                   </div>
                 )}
               </div>
@@ -260,8 +273,10 @@ export default function RegisterClinicPage() {
           {/* Owner Account Section */}
           <div className="glass" style={{ padding: '2rem', marginBottom: '2rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.5rem' }}>
-              <span style={{ fontSize: '1.25rem' }}>👤</span>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: '700' }}>Owner Account</h2>
+              <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: 'rgba(21,101,192,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <User size={17} color="var(--primary)" strokeWidth={1.75} />
+              </div>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text)' }}>Owner Account</h2>
             </div>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
               This creates the admin account for managing your clinic dashboard.
@@ -317,9 +332,9 @@ export default function RegisterClinicPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.8rem' }}
+                    style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                   >
-                    {showPassword ? '🙈' : '👁️'}
+                    {showPassword ? <EyeOff size={16} strokeWidth={1.75} /> : <Eye size={16} strokeWidth={1.75} />}
                   </button>
                 </div>
               </div>
@@ -334,23 +349,30 @@ export default function RegisterClinicPage() {
               width: '100%',
               padding: '14px',
               borderRadius: '100px',
-              background: loading ? 'var(--surface-3)' : 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+              background: loading ? 'var(--surface-4)' : 'var(--primary)',
               border: 'none',
               color: '#fff',
               fontWeight: '700',
               fontSize: '1rem',
               cursor: loading ? 'not-allowed' : 'pointer',
-              boxShadow: loading ? 'none' : '0 8px 32px rgba(99,102,241,0.3)',
+              boxShadow: loading ? 'none' : '0 6px 24px rgba(21,101,192,0.28)',
               transition: 'all 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
             }}
           >
-            {loading ? '⏳ Creating clinic...' : '🚀 Register Clinic'}
+            {loading
+              ? <><Loader2 size={18} style={{ animation: 'spin 0.8s linear infinite' }} /> Creating clinic...</>
+              : <><Plus size={18} strokeWidth={2.5} /> Register Clinic</>
+            }
           </button>
 
           {/* Login link */}
           <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
             Already have a clinic?{' '}
-            <Link href="/admin/login" style={{ color: 'var(--primary-light)', textDecoration: 'underline' }}>
+            <Link href="/admin/login" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>
               Login here
             </Link>
           </p>

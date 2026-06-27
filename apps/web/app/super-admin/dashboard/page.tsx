@@ -3,6 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import {
+  Hospital, User, Key, Link2, Settings, Plus, Pencil, Trash2,
+  CheckCircle, AlertCircle, ServerCrash, Wifi, LogOut
+} from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
@@ -307,8 +311,9 @@ export default function SuperAdminDashboardPage() {
         </div>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
-          <button style={{ textAlign: 'left', padding: '0.85rem 1.25rem', borderRadius: 'var(--radius-sm)', background: 'var(--primary)', border: 'none', color: '#fff', cursor: 'pointer', fontWeight: '600', fontSize: '0.95rem' }}>
-            🏥 Hospitals & Clinics
+          <button style={{ display: 'flex', alignItems: 'center', gap: '8px', textAlign: 'left', padding: '0.85rem 1.25rem', borderRadius: 'var(--radius-sm)', background: 'var(--primary)', border: 'none', color: '#fff', cursor: 'pointer', fontWeight: '600', fontSize: '0.95rem', width: '100%' }}>
+            <Hospital size={17} strokeWidth={1.75} />
+            Hospitals &amp; Clinics
           </button>
         </nav>
 
@@ -320,8 +325,9 @@ export default function SuperAdminDashboardPage() {
           </div>
           <button
             onClick={handleLogout}
-            style={{ width: '100%', padding: '8px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.8rem' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center', width: '100%', padding: '8px', background: 'rgba(198,40,40,0.10)', border: '1px solid rgba(198,40,40,0.25)', color: 'var(--danger)', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.8rem' }}
           >
+            <LogOut size={14} strokeWidth={2} />
             Logout
           </button>
         </div>
@@ -341,18 +347,20 @@ export default function SuperAdminDashboardPage() {
               setFormError(null);
             }}
             style={{
-              background: 'linear-gradient(135deg, var(--accent), var(--primary))',
+              display: 'flex', alignItems: 'center', gap: '6px',
+              background: 'var(--primary)',
               color: '#fff',
               border: 'none',
               padding: '12px 24px',
               borderRadius: '8px',
               fontWeight: '700',
               cursor: 'pointer',
-              boxShadow: '0 4px 16px rgba(6,182,212,0.25)',
+              boxShadow: '0 4px 16px rgba(21,101,192,0.25)',
               transition: 'all 0.2s',
             }}
           >
-            ➕ Onboard New Hospital
+            <Plus size={16} strokeWidth={2.5} />
+            Onboard New Hospital
           </button>
         </div>
 
@@ -369,7 +377,8 @@ export default function SuperAdminDashboardPage() {
           <div className="glass" style={{ padding: '1.5rem 2rem' }}>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600' }}>Database Connection</div>
             <div style={{ fontSize: '1.25rem', fontWeight: '700', marginTop: '1.2rem', color: 'var(--success)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-              🟢 Secure & Connected
+              <Wifi size={18} strokeWidth={2} />
+              Secure &amp; Connected
             </div>
           </div>
         </div>
@@ -384,8 +393,8 @@ export default function SuperAdminDashboardPage() {
               <p style={{ color: 'var(--text-muted)' }}>Fetching tenant directories...</p>
             </div>
           ) : error ? (
-            <div style={{ padding: '2rem', background: 'rgba(239,68,68,0.1)', borderRadius: '8px', color: 'var(--danger)' }}>
-              ⚠️ {error}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '1rem 1.25rem', background: 'var(--danger-bg)', borderRadius: '8px', color: 'var(--danger)', border: '1px solid rgba(198,40,40,0.2)' }}>
+              <AlertCircle size={16} strokeWidth={2} />{error}
             </div>
           ) : clinics.length === 0 ? (
             <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '3rem 0' }}>No clinics have been onboarded yet. Click Onboard New Hospital to get started.</p>
@@ -447,7 +456,7 @@ export default function SuperAdminDashboardPage() {
                             e.currentTarget.style.background = 'rgba(6,182,212,0.15)';
                           }}
                         >
-                          ✏️ Edit
+                          <Pencil size={13} strokeWidth={2} /> Edit
                         </button>
                         <button
                           onClick={() => handleDeleteClick(c)}
@@ -469,7 +478,7 @@ export default function SuperAdminDashboardPage() {
                             e.currentTarget.style.background = 'rgba(239,68,68,0.15)';
                           }}
                         >
-                          🗑️ Delete
+                          <Trash2 size={13} strokeWidth={2} /> Delete
                         </button>
                       </td>
                     </tr>
@@ -490,14 +499,17 @@ export default function SuperAdminDashboardPage() {
               </div>
 
               {formError && (
-                <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
-                  ⚠️ {formError}
-                </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--danger-bg)', border: '1px solid rgba(198,40,40,0.2)', color: 'var(--danger)', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+                    <AlertCircle size={15} strokeWidth={2} />
+                    {formError}
+                  </div>
               )}
 
               <form onSubmit={handleOnboard} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 {/* Clinic Profile */}
-                <h3 style={{ fontSize: '0.95rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--accent)', borderBottom: '1px solid var(--border)', paddingBottom: '0.25rem' }}>🏥 Hospital Details</h3>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.95rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--primary)', borderBottom: '1px solid var(--border)', paddingBottom: '0.25rem' }}>
+                  <Hospital size={15} strokeWidth={2} /> Hospital Details
+                </h3>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div>
@@ -562,7 +574,9 @@ export default function SuperAdminDashboardPage() {
                 </div>
 
                 {/* Administrator Profile */}
-                <h3 style={{ fontSize: '0.95rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--primary-light)', borderBottom: '1px solid var(--border)', paddingBottom: '0.25rem', marginTop: '0.75rem' }}>👤 Hospital Admin Credentials</h3>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.95rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--primary)', borderBottom: '1px solid var(--border)', paddingBottom: '0.25rem', marginTop: '0.75rem' }}>
+                  <User size={15} strokeWidth={2} /> Hospital Admin Credentials
+                </h3>
 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: '500' }}>Admin Owner Name *</label>
@@ -627,7 +641,7 @@ export default function SuperAdminDashboardPage() {
                     marginTop: '1rem',
                   }}
                 >
-                  {formLoading ? 'Provisioning Tenant...' : '🚀 Onboard & Provision Credentials'}
+                  {formLoading ? 'Provisioning Tenant...' : 'Onboard & Provision Credentials'}
                 </button>
               </form>
             </div>
@@ -652,25 +666,35 @@ export default function SuperAdminDashboardPage() {
               {/* Booking & Login Info */}
               <div style={{ background: 'var(--surface-2)', borderRadius: '8px', padding: '1.25rem', border: '1px solid var(--border)', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem', fontSize: '0.85rem' }}>
                 <div>
-                  <strong style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🏥 Hospital Name</strong>
+                  <strong style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <Hospital size={11} /> Hospital Name
+                  </strong>
                   <span style={{ fontSize: '1rem', fontWeight: '700' }}>{onboardedClinic.name}</span>
                 </div>
                 <div>
-                  <strong style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>👤 Administrator Login Email</strong>
+                  <strong style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <User size={11} /> Administrator Login Email
+                  </strong>
                   <span style={{ fontFamily: 'monospace', fontWeight: '600' }}>{onboardedClinic.ownerEmail}</span>
                 </div>
                 <div>
-                  <strong style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🔑 Initial Password</strong>
+                  <strong style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <Key size={11} /> Initial Password
+                  </strong>
                   <span style={{ fontFamily: 'monospace', fontWeight: '700', color: 'var(--warning)', background: 'rgba(245,158,11,0.08)', padding: '2px 6px', borderRadius: '4px' }}>{onboardedClinic.ownerPassword}</span>
                 </div>
                 <div>
-                  <strong style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🔗 Public Patient Booking URL</strong>
+                  <strong style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <Link2 size={11} /> Public Patient Booking URL
+                  </strong>
                   <a href={`${currentDomain}/book/${onboardedClinic.slug}`} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline', fontWeight: '600' }}>
                     {currentDomain}/book/{onboardedClinic.slug}
                   </a>
                 </div>
                 <div>
-                  <strong style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>⚙️ Staff Dashboard Login URL</strong>
+                  <strong style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <Settings size={11} /> Staff Dashboard Login URL
+                  </strong>
                   <a href={`${currentDomain}/admin/login`} target="_blank" rel="noreferrer" style={{ color: 'var(--primary-light)', textDecoration: 'underline', fontWeight: '600' }}>
                     {currentDomain}/admin/login
                   </a>

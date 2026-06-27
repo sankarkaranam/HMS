@@ -1,10 +1,10 @@
 'use client';
 import Link from 'next/link';
+import { Building2, UserCog, Hospital, Stethoscope, Link2, LayoutDashboard, ArrowRight } from 'lucide-react';
 
 export default function HomePage() {
   return (
     <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', background: 'var(--surface)', position: 'relative', overflow: 'hidden' }}>
-      {/* Background decorative blobs */}
       <div style={{ position: 'absolute', top: '-10%', left: '-8%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(21,101,192,0.09) 0%, transparent 70%)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: '-15%', right: '-8%', width: '450px', height: '450px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,151,167,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', top: '35%', right: '18%', width: '280px', height: '280px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(21,101,192,0.05) 0%, transparent 70%)', pointerEvents: 'none' }} />
@@ -34,7 +34,8 @@ export default function HomePage() {
             boxShadow: '0 6px 24px rgba(21,101,192,0.30)',
             transition: 'transform 0.2s, box-shadow 0.2s',
           }}>
-            🚀 Register Your Clinic
+            <Building2 size={18} />
+            Register Your Clinic
           </Link>
           <Link href="/admin/login" style={{
             display: 'inline-flex', alignItems: 'center', gap: '8px',
@@ -44,7 +45,8 @@ export default function HomePage() {
             transition: 'transform 0.2s, background 0.2s',
             boxShadow: 'var(--shadow-sm)',
           }}>
-            ⚙️ Admin Login
+            <UserCog size={18} />
+            Admin Login
           </Link>
         </div>
 
@@ -53,14 +55,16 @@ export default function HomePage() {
           <h2 style={{ fontSize: '0.8rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '3px', marginBottom: '2rem', fontWeight: '700' }}>How It Works</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
             {[
-              { step: '01', icon: '🏥', title: 'Register Clinic', desc: 'Sign up and create your clinic profile with a unique booking URL.' },
-              { step: '02', icon: '👨‍⚕️', title: 'Add Doctors', desc: 'Add doctors, set their schedule, fees, and availability.' },
-              { step: '03', icon: '🔗', title: 'Share Link', desc: 'Share your booking URL with patients — they book online instantly.' },
-              { step: '04', icon: '📊', title: 'Manage', desc: 'Track appointments, payments, and patients from your dashboard.' },
-            ].map(({ step, icon, title, desc }) => (
+              { step: '01', Icon: Hospital, title: 'Register Clinic', desc: 'Sign up and create your clinic profile with a unique booking URL.' },
+              { step: '02', Icon: Stethoscope, title: 'Add Doctors', desc: 'Add doctors, set their schedule, fees, and availability.' },
+              { step: '03', Icon: Link2, title: 'Share Link', desc: 'Share your booking URL with patients — they book online instantly.' },
+              { step: '04', Icon: LayoutDashboard, title: 'Manage', desc: 'Track appointments, payments, and patients from your dashboard.' },
+            ].map(({ step, Icon, title, desc }) => (
               <div key={step} className="glass glow-card" style={{ padding: '2rem 1.5rem', textAlign: 'left' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.75rem' }}>
-                  <span style={{ fontSize: '1.5rem' }}>{icon}</span>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(21,101,192,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon size={18} color="var(--primary)" strokeWidth={1.75} />
+                  </div>
                   <span style={{ fontSize: '0.68rem', color: 'var(--primary)', fontWeight: '700', letterSpacing: '1.5px' }}>STEP {step}</span>
                 </div>
                 <div style={{ fontSize: '1.05rem', fontWeight: '700', marginBottom: '0.5rem', color: 'var(--text)' }}>{title}</div>
