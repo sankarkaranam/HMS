@@ -7,7 +7,8 @@ import {
   Calendar, Clock, User, Phone, Mail, Award, CheckCircle,
   MapPin, Building2, PhoneCall, ShieldCheck, ArrowRight,
   Sparkles, Activity, Info, FileText, Briefcase,
-  ChevronRight, Star, Zap
+  ChevronRight, Star, Zap, Hospital, Laptop, CreditCard,
+  Printer, Lock, AlertCircle, Stethoscope, Video, Check
 } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -306,7 +307,9 @@ export default function BookingPage() {
     return (
       <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', background: 'var(--surface)', textAlign: 'center' }}>
         <div className="glass animate-in-scale" style={{ padding: '3rem 2.5rem', maxWidth: '440px', border: '1px solid rgba(239,68,68,0.2)' }}>
-          <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>🏥</div>
+          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(21,101,192,0.08)', border: '1.5px solid rgba(21,101,192,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+            <Hospital size={30} color="var(--primary)" strokeWidth={1.75} />
+          </div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '0.75rem' }}>Clinic Not Found</h2>
           <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: '1.6' }}>{error}</p>
           <button onClick={() => window.location.reload()} style={{ background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))', color: '#fff', border: 'none', padding: '12px 28px', borderRadius: '99px', cursor: 'pointer', fontWeight: '600', fontSize: '0.95rem', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
@@ -356,7 +359,7 @@ export default function BookingPage() {
                 { label: 'Doctor', value: successApt.doctor?.name || 'Doctor' },
                 { label: 'Date', value: aptTime.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) },
                 { label: 'Time', value: aptTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) },
-                { label: 'Type', value: successApt.consultationType === 'in_person' ? '🏥 In Clinic' : '💻 Teleconsult' },
+                { label: 'Type', value: successApt.consultationType === 'in_person' ? 'In Clinic' : 'Teleconsult' },
                 { label: 'Ref ID', value: refId, mono: true },
                 ...(clinic?.phone ? [{ label: 'Helpline', value: clinic.phone }] : []),
               ].map(({ label, value, mono }) => (
@@ -383,7 +386,7 @@ export default function BookingPage() {
                 onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
                 onMouseLeave={e => e.currentTarget.style.transform = 'none'}
               >
-                🖨️ Print Appointment
+                <Printer size={16} strokeWidth={2} /> Print Appointment
               </button>
               <button 
                 onClick={() => { window.location.href = 'https://sriswethaclinic.com'; }} 
@@ -414,8 +417,8 @@ export default function BookingPage() {
             <h1 style={{ fontSize: '20px', fontWeight: '800', margin: '0 0 4px 0', textTransform: 'uppercase', color: '#000', letterSpacing: '-0.3px' }}>
               {clinic?.name || 'Sri Swetha Pharmacy & Clinic'}
             </h1>
-            {clinic?.address && <p style={{ margin: '2px 0', fontSize: '12px', color: '#444' }}>📍 {clinic.address}</p>}
-            {clinic?.phone && <p style={{ margin: '2px 0', fontSize: '12px', color: '#444' }}>📞 Helpline: {clinic.phone}</p>}
+            {clinic?.address && <p style={{ margin: '2px 0', fontSize: '12px', color: '#444', display: 'inline-flex', alignItems: 'center', gap: '4px', justifyContent: 'center', width: '100%' }}><MapPin size={12} strokeWidth={2} /> {clinic.address}</p>}
+            {clinic?.phone && <p style={{ margin: '2px 0', fontSize: '12px', color: '#444', display: 'inline-flex', alignItems: 'center', gap: '4px', justifyContent: 'center', width: '100%' }}><Phone size={12} strokeWidth={2} /> Helpline: {clinic.phone}</p>}
             <div style={{ marginTop: '12px', display: 'inline-block', border: '1px solid #000', padding: '4px 12px', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
               Official Appointment Slip & Receipt
             </div>
@@ -445,12 +448,14 @@ export default function BookingPage() {
               <tr style={{ borderBottom: '1px solid #ddd' }}>
                 <td style={{ padding: '8px 0', fontWeight: '600', color: '#555' }}>Consultation Mode</td>
                 <td style={{ padding: '8px 0', fontWeight: '600' }}>
-                  {successApt.consultationType === 'in_person' ? '🏥 In-Clinic Consultation' : '💻 Teleconsultation (Online)'}
+                  {successApt.consultationType === 'in_person' ? 'In-Clinic Consultation' : 'Teleconsultation (Online)'}
                 </td>
               </tr>
               <tr style={{ borderBottom: '1px solid #ddd' }}>
                 <td style={{ padding: '8px 0', fontWeight: '600', color: '#555' }}>Status</td>
-                <td style={{ padding: '8px 0', fontWeight: '700', color: '#1e7e34' }}>CONFIRMED (Paid ✅)</td>
+                <td style={{ padding: '8px 0', fontWeight: '700', color: '#1e7e34', display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
+                  <CheckCircle size={14} strokeWidth={2} color="#1e7e34" /> CONFIRMED (Paid)
+                </td>
               </tr>
             </tbody>
           </table>
@@ -476,7 +481,9 @@ export default function BookingPage() {
 
           {/* Instructions */}
           <div style={{ borderLeft: '3px solid #000', paddingLeft: '12px', fontSize: '11px', lineHeight: '1.4', color: '#333', marginBottom: '40px' }}>
-            <strong style={{ display: 'block', fontSize: '12px', margin: '0 0 4px 0', color: '#000' }}>📌 Patient Guidelines & Instructions:</strong>
+            <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '12px', margin: '0 0 4px 0', color: '#000' }}>
+              <Info size={12} strokeWidth={2.5} /> Patient Guidelines &amp; Instructions:
+            </strong>
             <ul style={{ margin: 0, paddingLeft: '14px' }}>
               <li>Please report at the reception desk / join the video room at least 10 minutes prior to your time slot.</li>
               <li>Please carry this printout or show the SMS/email confirmation on your phone upon arrival.</li>
@@ -548,10 +555,9 @@ export default function BookingPage() {
           </div>
         </header>
 
-        {/* Error Banner */}
-        {error && (
+         {error && (
           <div className="animate-in" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)', color: '#fca5a5', padding: '1rem 1.25rem', borderRadius: 'var(--radius-sm)', marginBottom: '2rem', display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.875rem' }}>
-            <span style={{ fontSize: '1rem', flexShrink: 0 }}>⚠️</span>
+            <AlertCircle size={16} strokeWidth={2} style={{ color: '#f87171', flexShrink: 0, marginTop: '2px' }} />
             <div>
               <strong style={{ display: 'block', marginBottom: '2px', color: '#f87171' }}>Booking Error</strong>
               {error}
@@ -768,17 +774,18 @@ export default function BookingPage() {
                 <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.55rem', fontWeight: '600' }}>Consultation Mode</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
                   {[
-                    { value: 'in_person', label: '🏥 In Clinic', sub: clinic?.paymentGateway === 'free' ? 'Pay at clinic' : 'Online payment' },
-                    { value: 'teleconsult', label: '💻 Teleconsult', sub: 'Online payment req.' },
-                  ].map(({ value, label, sub }) => {
+                    { value: 'in_person', label: 'In Clinic', Icon: Hospital, sub: clinic?.paymentGateway === 'free' ? 'Pay at clinic' : 'Online payment' },
+                    { value: 'teleconsult', label: 'Teleconsult', Icon: Laptop, sub: 'Online payment req.' },
+                  ].map(({ value, label, Icon, sub }) => {
                     const isActive = consultationType === value;
                     const isPayOnline = value === 'teleconsult' && Number(selectedDoctor?.consultationFee) > 0;
                     return (
                       <button key={value} type="button" onClick={() => setConsultationType(value as any)}
-                        style={{ padding: '0.65rem 0.5rem', borderRadius: 'var(--radius-sm)', background: isActive ? 'rgba(99,102,241,0.1)' : 'rgba(30,41,59,0.4)', border: isActive ? '2px solid var(--primary)' : '1px solid rgba(255,255,255,0.07)', color: isActive ? 'var(--primary-light)' : 'var(--text-muted)', fontWeight: '700', fontSize: '0.8rem', cursor: 'pointer', transition: 'all 0.18s', fontFamily: 'Inter, inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                        style={{ padding: '0.65rem 0.5rem', borderRadius: 'var(--radius-sm)', background: isActive ? 'rgba(99,102,241,0.1)' : 'rgba(30,41,59,0.4)', border: isActive ? '2px solid var(--primary)' : '1px solid rgba(255,255,255,0.07)', color: isActive ? 'var(--primary-light)' : 'var(--text-muted)', fontWeight: '700', fontSize: '0.8rem', cursor: 'pointer', transition: 'all 0.18s', fontFamily: 'Inter, inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                        <Icon size={16} strokeWidth={2} style={{ color: isActive ? 'var(--primary-light)' : 'var(--text-subtle)' }} />
                         {label}
-                        <span style={{ fontSize: '0.62rem', fontWeight: '600', color: isPayOnline ? (isActive ? 'var(--warning)' : 'var(--warning)') : (isActive ? 'rgba(129,140,248,0.7)' : 'var(--text-subtle)'), opacity: 0.9 }}>
-                          {isPayOnline ? '⚡ PhonePe required' : sub}
+                        <span style={{ fontSize: '0.62rem', fontWeight: '600', color: isPayOnline ? 'var(--warning)' : (isActive ? 'rgba(129,140,248,0.7)' : 'var(--text-subtle)'), opacity: 0.9 }}>
+                          {isPayOnline ? 'PhonePe required' : sub}
                         </span>
                       </button>
                     );
@@ -790,8 +797,8 @@ export default function BookingPage() {
                     <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.45rem', fontWeight: '600' }}>Payment Option</label>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
                       {[
-                        { value: 'online', label: '💳 Pay Online Now', sub: 'UPI, Cards' },
-                        { value: 'offline', label: '🏥 Pay at Hospital', sub: 'Cash / UPI Counter' },
+                        { value: 'online', label: 'Pay Online Now', Icon: CreditCard, sub: 'UPI, Cards' },
+                        { value: 'offline', label: 'Pay at Hospital', Icon: Hospital, sub: 'Cash / UPI Counter' },
                       ].map((opt) => {
                         const isActive = paymentMode === opt.value;
                         return (
@@ -813,9 +820,10 @@ export default function BookingPage() {
                               display: 'flex',
                               flexDirection: 'column',
                               alignItems: 'center',
-                              gap: '2px'
+                              gap: '4px'
                             }}
                           >
+                            <opt.Icon size={16} strokeWidth={2} style={{ color: isActive ? 'var(--primary-light)' : 'var(--text-subtle)' }} />
                             {opt.label}
                             <span style={{ fontSize: '0.62rem', fontWeight: '500', color: 'var(--text-subtle)' }}>
                               {opt.sub}
@@ -830,7 +838,7 @@ export default function BookingPage() {
                 {/* Teleconsult info banner */}
                 {consultationType === 'teleconsult' && Number(selectedDoctor?.consultationFee) > 0 && (
                   <div className="animate-in" style={{ marginTop: '0.6rem', display: 'flex', alignItems: 'flex-start', gap: '8px', background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: 'var(--radius-xs)', padding: '0.65rem 0.85rem' }}>
-                    <span style={{ fontSize: '0.95rem', flexShrink: 0 }}>⚡</span>
+                    <Zap size={14} style={{ color: '#fbbf24', marginTop: '2px', flexShrink: 0 }} />
                     <p style={{ fontSize: '0.76rem', color: '#fbbf24', lineHeight: '1.45', margin: 0 }}>
                       <strong>Online payment required</strong> for teleconsult. You'll be redirected to PhonePe/Razorpay to complete payment.
                     </p>
@@ -840,7 +848,7 @@ export default function BookingPage() {
                 {/* Pay at Hospital info banner */}
                 {consultationType === 'in_person' && paymentMode === 'offline' && clinic?.paymentGateway !== 'free' && Number(selectedDoctor?.consultationFee) > 0 && (
                   <div className="animate-in" style={{ marginTop: '0.6rem', display: 'flex', alignItems: 'flex-start', gap: '8px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.18)', borderRadius: 'var(--radius-xs)', padding: '0.65rem 0.85rem' }}>
-                    <span style={{ fontSize: '0.95rem', flexShrink: 0 }}>🏥</span>
+                    <Hospital size={14} style={{ color: 'var(--success)', marginTop: '2px', flexShrink: 0 }} />
                     <p style={{ fontSize: '0.76rem', color: 'var(--success)', lineHeight: '1.45', margin: 0 }}>
                       <strong>Pay at Counter</strong> selected. You can pay cash or UPI at the hospital reception.
                     </p>
@@ -861,13 +869,16 @@ export default function BookingPage() {
               {selectedDoctor && selectedSlot && (
                 <div className="animate-in" style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${isTeleconsultPaid ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.06)'}`, borderRadius: 'var(--radius-sm)', padding: '1.1rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                   {[
-                    { label: '🥼 Doctor', value: selectedDoctor.name },
-                    { label: '📅 Date', value: new Date(selectedSlot).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) },
-                    { label: '🕐 Time', value: new Date(selectedSlot).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) },
-                    { label: '💬 Mode', value: consultationType === 'in_person' ? 'In Clinic' : '💻 Teleconsult' },
-                  ].map(({ label, value }) => (
-                    <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                      <span>{label}</span>
+                    { label: 'Doctor', Icon: Stethoscope, value: selectedDoctor.name },
+                    { label: 'Date', Icon: Calendar, value: new Date(selectedSlot).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) },
+                    { label: 'Time', Icon: Clock, value: new Date(selectedSlot).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) },
+                    { label: 'Mode', Icon: consultationType === 'in_person' ? Hospital : Laptop, value: consultationType === 'in_person' ? 'In Clinic' : 'Teleconsult' },
+                  ].map(({ label, Icon, value }) => (
+                    <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: 'var(--text-muted)', alignItems: 'center' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Icon size={14} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
+                        {label}
+                      </span>
                       <span style={{ fontWeight: '600', color: 'var(--text)' }}>{value}</span>
                     </div>
                   ))}
@@ -880,7 +891,9 @@ export default function BookingPage() {
                           : `₹${selectedDoctor.consultationFee}`}
                       </span>
                       {isTeleconsultPaid || (consultationType === 'in_person' && paymentMode === 'online' && clinic?.paymentGateway !== 'free' && Number(selectedDoctor.consultationFee) > 0) ? (
-                        <span style={{ display: 'block', fontSize: '0.66rem', color: '#f59e0b', fontWeight: '600', marginTop: '1px' }}>⚡ Online via {clinic?.paymentGateway}</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'flex-end', fontSize: '0.66rem', color: '#f59e0b', fontWeight: '600', marginTop: '1px' }}>
+                          <Zap size={10} strokeWidth={2.5} /> Online via {clinic?.paymentGateway}
+                        </span>
                       ) : null}
                       {((!isTeleconsultPaid && clinic?.paymentGateway === 'free') || (consultationType === 'in_person' && paymentMode === 'offline')) && Number(selectedDoctor.consultationFee) > 0 ? (
                         <span style={{ display: 'block', fontSize: '0.66rem', color: 'var(--text-subtle)', marginTop: '1px' }}>Pay at clinic / hospital</span>
@@ -946,18 +959,18 @@ export default function BookingPage() {
                 ) : !name || !phone ? (
                   'Enter Your Details'
                 ) : isTeleconsultPaid ? (
-                  `⚡ Pay ₹${selectedDoctor?.consultationFee} via PhonePe`
+                  `Pay ₹${selectedDoctor?.consultationFee} via PhonePe`
                 ) : isFreeBooking ? (
                   Number(selectedDoctor?.consultationFee) === 0
-                    ? '✓ Confirm Appointment (Free)'
-                    : `✓ Confirm — Pay ₹${selectedDoctor?.consultationFee} at Clinic`
+                    ? 'Confirm Appointment (Free)'
+                    : `Confirm — Pay ₹${selectedDoctor?.consultationFee} at Clinic`
                 ) : (
                   `Pay ₹${selectedDoctor?.consultationFee} & Confirm`
                 )}
               </button>
 
-              <p style={{ textAlign: 'center', fontSize: '0.73rem', color: 'var(--text-subtle)', lineHeight: '1.5' }}>
-                🔒 Your data is secure and protected. By booking, you agree to our terms.
+              <p style={{ display: 'flex', alignItems: 'center', gap: '5px', justifyContent: 'center', fontSize: '0.73rem', color: 'var(--text-subtle)', lineHeight: '1.5' }}>
+                <Lock size={12} strokeWidth={2} style={{ color: 'var(--text-subtle)' }} /> Your data is secure and protected. By booking, you agree to our terms.
               </p>
             </form>
           </section>
