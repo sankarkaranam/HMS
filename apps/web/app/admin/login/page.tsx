@@ -129,8 +129,8 @@ export default function AdminLoginPage() {
   return (
     <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', background: 'var(--surface)', position: 'relative', overflow: 'hidden' }}>
       {/* Decorative Orbs */}
-      <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: '-10%', right: '-10%', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(6,182,212,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(21,101,192,0.10) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '-10%', right: '-10%', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,151,167,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
       <div className="glass animate-in" style={{ padding: '3rem 2.5rem', maxWidth: '440px', width: '100%', zIndex: 1, boxShadow: 'var(--shadow)' }}>
         <header style={{ textAlign: 'center', marginBottom: '2rem' }}>
@@ -238,7 +238,7 @@ export default function AdminLoginPage() {
                 color: '#fff',
                 fontWeight: '700',
                 cursor: loading ? 'not-allowed' : 'pointer',
-                boxShadow: '0 4px 16px rgba(99,102,241,0.25)',
+                boxShadow: '0 4px 16px rgba(21,101,192,0.25)',
                 marginTop: '0.5rem',
               }}
             >
@@ -273,7 +273,7 @@ export default function AdminLoginPage() {
                   color: '#fff',
                   fontWeight: '700',
                   cursor: loading ? 'not-allowed' : 'pointer',
-                  boxShadow: '0 4px 16px rgba(99,102,241,0.25)',
+                  boxShadow: '0 4px 16px rgba(21,101,192,0.25)',
                   marginTop: '0.5rem',
                 }}
               >

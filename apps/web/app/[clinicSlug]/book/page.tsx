@@ -253,7 +253,7 @@ export default function BookingPage() {
               setBookingLoading(false);
             }
           },
-          theme: { color: '#6366f1' },
+          theme: { color: '#1565C0' },
           modal: { ondismiss: () => { setError('Payment cancelled.'); setBookingLoading(false); } },
         };
         const rzp = new (window as any).Razorpay(options);
@@ -277,9 +277,9 @@ export default function BookingPage() {
   if (verifyingPayment) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface)', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(21,101,192,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ textAlign: 'center', zIndex: 1 }}>
-          <div style={{ width: '80px', height: '80px', borderRadius: '50%', border: '3px solid rgba(99,102,241,0.15)', borderTop: '3px solid var(--primary)', animation: 'spin 0.9s linear infinite', margin: '0 auto 2rem' }} />
+          <div style={{ width: '80px', height: '80px', borderRadius: '50%', border: '3px solid rgba(21,101,192,0.15)', borderTop: '3px solid var(--primary)', animation: 'spin 0.9s linear infinite', margin: '0 auto 2rem' }} />
           <h2 style={{ fontSize: '1.6rem', fontWeight: '800', marginBottom: '0.5rem', letterSpacing: '-0.5px' }}>Verifying Payment</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>Please wait while we confirm your transaction…</p>
         </div>
